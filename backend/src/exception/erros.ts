@@ -7,3 +7,7 @@ export class ErroValidacao extends Error{
         super(message);
     }
 }
+
+export interface ErroValidacaoMessage{
+    erro: string;
+}

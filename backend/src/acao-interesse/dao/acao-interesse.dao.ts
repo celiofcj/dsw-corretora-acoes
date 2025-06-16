@@ -11,7 +11,7 @@ export class AcaoInteresseDao {
     }
 
     async obterTodas() : Promise<Array<IAcaoInteresse>> {
-        return  AcaoInteresse.find()
+        return AcaoInteresse.find()
     }
 
     async obterUma(id: string) : Promise<IAcaoInteresse | null> {

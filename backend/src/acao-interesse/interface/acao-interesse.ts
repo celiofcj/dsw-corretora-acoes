@@ -26,10 +26,6 @@ AcaoInteresseSchema.set('toJSON', {
     virtuals: false,
     versionKey: false,
     transform: (_, ret) => {
-        // Se quiser a opção 1, só remova __v:
-        // delete ret.__v;
-
-        // Se quiser a opção 2, converta _id para id:
         ret.id = ret._id;
         delete ret._id;
     }

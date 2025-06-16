@@ -21,16 +21,19 @@
   },
   "homepage": "https://github.com/celiofcj/dsw-corretora-acoes#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.2",
     "pg": "^8.16.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^24.0.1",
+    "@types/pg": "^8.15.4",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
-    "@types/pg": "^8.15.4"
+    "typescript": "^5.8.3"
   }
 }

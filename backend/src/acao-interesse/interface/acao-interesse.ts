@@ -35,4 +35,6 @@ AcaoInteresseSchema.set('toJSON', {
     }
 });
 
-export default mongoose.model<IAcaoInteresse>('AcaoInteresse', AcaoInteresseSchema);
+const AcaoInteresse =  mongoose.model<IAcaoInteresse>('AcaoInteresse', AcaoInteresseSchema);
+
+export default AcaoInteresse

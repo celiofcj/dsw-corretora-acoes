@@ -13,14 +13,46 @@ export interface IOrdemCompra extends Document {
 }
 
 const OrdemCompraSchema = new Schema<IOrdemCompra>({
-    DataHora: { type: Date, required: true },
-    Ticker: { type: String, required: true },
-    Quantidade: { type: Number, required: true },
-    Modo: { type: String, required: true },
-    Executada: { type: Boolean, required: true },
-    PrecoExecucao: { type: Number, required: false },
-    PrecoReferenciaCompra: { type: Number, required: false },
-    DataHoraExecucao: { type: Date, required: false },
+    DataHora: {
+        type: Date,
+        required: true
+    },
+    Ticker: {
+        type: String,
+        required: true,
+        trim: true,
+        uppercase: true
+    },
+    Quantidade: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    Modo: {
+        type: String,
+        required: true,
+        trim: true,
+        uppercase: true
+    },
+    Executada: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    PrecoExecucao: {
+        type: Number,
+        required: false,
+        min: 0
+    },
+    PrecoReferenciaCompra: {
+        type: Number,
+        required: false,
+        min: 0
+    },
+    DataHoraExecucao: {
+        type: Date,
+        required: false
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

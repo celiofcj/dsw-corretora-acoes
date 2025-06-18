@@ -14,7 +14,6 @@ const ordemCompraService = new OrdemCompraService();
 router.get('/', (req : Request<{}, {}, void>, res: Response<Array<IOrdemCompra>>) => {
     ordemCompraService.obtemOrdensCompra()
         .then(resultado => res.status(200).json(resultado))
-
 })
 
 router.post('/', (req: Request<{}, {}, IOrdemCompra>, res: Response<IOrdemCompra | ErroValidacaoMessage | null>) => {
@@ -22,7 +21,6 @@ router.post('/', (req: Request<{}, {}, IOrdemCompra>, res: Response<IOrdemCompra
         validarOrdemCompra(req.body);
         ordemCompraService.salvarOrdemCompra(req.body)
             .then(salvo => res.status(201).json(salvo))
-
             .catch((error) => {
                 console.error('Erro ao salvar ordem:', error);
                 res.status(500).json({ erro: 'Erro ao salvar ordem.' });

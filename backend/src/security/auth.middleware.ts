@@ -31,6 +31,7 @@ export const autenticarToken = (req: Request, res: Response, next: NextFunction)
     try {
         const jwtPayload = jwt.verify(token, JWT_SECRET) as JwtPayload
         req.user = {user_id: jwtPayload.user_id, email: jwtPayload.email}
+        next();
     } catch (error) {
         console.error('Erro de verificação do token:', error)
         res.status(401).json({ error: 'Token de autenticação inválido ou expirado.' })

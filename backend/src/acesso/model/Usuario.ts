@@ -1,4 +1,4 @@
-import {model, Schema, Document} from "mongoose";
+import mongoose, {model, Schema, Document} from "mongoose";
 
 export interface IUsuario extends Document {
     _id: Schema.Types.ObjectId;

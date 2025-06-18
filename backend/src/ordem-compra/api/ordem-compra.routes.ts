@@ -36,7 +36,6 @@ router.post('/', (req: Request<{}, {}, IOrdemCompra>, res: Response<IOrdemCompra
 router.post('/:id/executar', (req: Request<{id: string}, {}, IOrdemCompra>, res: Response<IOrdemCompra>) => {
     ordemCompraService.executarOrdemCompra(req.params.id, req.body)
         .then(salvo => res.status(201).json(salvo))
-
 })
 
 export default router

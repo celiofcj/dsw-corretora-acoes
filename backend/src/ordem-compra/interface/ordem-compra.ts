@@ -9,7 +9,7 @@ export interface IOrdemCompra extends Document {
     PrecoExecucao : number;
     PrecoReferenciaCompra : number;
     DataHoraExecucao : Date;
-
+    UsuarioID: mongoose.Types.ObjectId;
 }
 
 const OrdemCompraSchema = new Schema<IOrdemCompra>({
@@ -52,6 +52,11 @@ const OrdemCompraSchema = new Schema<IOrdemCompra>({
     DataHoraExecucao: {
         type: Date,
         required: false
+    },
+    UsuarioID: {
+        type: Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true
     }
 }, {
     timestamps: true,

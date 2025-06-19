@@ -6,3 +6,7 @@ export interface DadosAcesso {
 export interface Token {
     token: string;
 }
+
+export interface TrocaSenha {
+    senha: string
+}

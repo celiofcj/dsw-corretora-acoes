@@ -16,6 +16,12 @@ export class NotFoundError extends Error {
     }
 }
 
+export class AutenticacaoError extends Error {
+    constructor(msg: string) {
+        super('');
+    }
+}
+
 export interface ErroMessage {
     erro: string;
 }

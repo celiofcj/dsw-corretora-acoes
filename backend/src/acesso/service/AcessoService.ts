@@ -1,12 +1,15 @@
 import {AcessoDao} from "../dao/acesso.dao"
 import {ErroValidacao} from "../../exception/erros"
 import jwt from "jsonwebtoken";
-import {DadosAcesso, Token} from "../interface/acesso.interface";
+import {DadosAcesso, TrocaSenha, Token} from "../interface/acesso.interface";
 import {SenhaService} from "./SenhaService";
+import {UsuarioLogadoService} from "./UsuarioLogadoService";
+import {UserData} from "../../security/UserData";
 
 export class AcessoService {
     private acessoDao = new AcessoDao()
     private senhaService = new SenhaService()
+    private usuarioLogadoService = new UsuarioLogadoService()
 
     async login(dados: DadosAcesso): Promise<Token> {
         const usuarioAcesso = await this.acessoDao.obterDoEmail(dados.email)
@@ -48,7 +51,7 @@ export class AcessoService {
             errosValidacao = [...errosValidacao, ...errosValidacaoUnicidade]
         }
 
-        const errosValidacaoSenha = this.validarFormatoSenha(dados.senha)
+        const errosValidacaoSenha = this.senhaService.validarFormatoSenha(dados.senha)
 
         errosValidacao = [...errosValidacao, ...errosValidacaoSenha]
 
@@ -64,6 +67,22 @@ export class AcessoService {
         }
         const usuario = await this.acessoDao.salvarComDadosAcesso(paraSalvar)
         console.log(`Usuario registrado: ${usuario}`)
+    }
+
+    async trocarSenha(novaSenha: TrocaSenha, userData: UserData) {
+        const usuario = await this.usuarioLogadoService.obterUsuarioLogado(userData)
+
+        const errosValidacaoSenha = this.senhaService.validarFormatoSenha(novaSenha.senha)
+
+        if(errosValidacaoSenha.length > 0) {
+            throw new ErroValidacao(errosValidacaoSenha)
+        }
+
+        return this.senhaService.atualizarSenha(novaSenha, usuario.senha)
+            .then(senhaAtualizada => {
+                usuario.senha = senhaAtualizada
+                this.acessoDao.salvar(usuario)
+            })
     }
 
     private validarFormatoEmail(email: string): Array<string> {
@@ -91,20 +110,4 @@ export class AcessoService {
             })
     }
 
-    private validarFormatoSenha(senha: string): Array<string> {
-        const array = new Array<string>
-        if(senha === null) {
-            array.push('Senha não pode ser nula')
-        }
-
-        if (senha.length < 8) {
-            array.push('Senha não pode ter menos de 8 caracteres')
-        }
-
-        if(!/.*[a-zA-Z].*$/.test(senha) && /.*[0-9].*$/.test(senha)) {
-            array.push('Senha deve ter pelo menos uma letra e um número')
-        }
-
-        return array
-    }
 }

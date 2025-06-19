@@ -12,6 +12,7 @@ declare global {
     }
 }
 
+
 export const autenticarToken = (req: Request, res: Response, next: NextFunction) => {
     if (!req.headers || !req.headers.authorization) {
         res.status(401).json({ error: 'Token de autenticação não fornecido.' })
@@ -30,7 +31,7 @@ export const autenticarToken = (req: Request, res: Response, next: NextFunction)
 
     try {
         const jwtPayload = jwt.verify(token, JWT_SECRET) as JwtPayload
-        req.user = {user_id: jwtPayload.user_id, email: jwtPayload.email}
+        req.user = {user_id: jwtPayload.user_id, email: jwtPayload.email, versaoSenha: jwtPayload.versaoSenha}
         next();
     } catch (error) {
         console.error('Erro de verificação do token:', error)

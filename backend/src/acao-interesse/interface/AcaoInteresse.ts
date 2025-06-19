@@ -1,8 +1,9 @@
-import mongoose, { Schema, Document } from "mongoose";
+import {Schema, Document, Types, model} from "mongoose";
 
 export interface IAcaoInteresse extends Document {
     ticker: string;
     ordem: number;
+    usuario: Types.ObjectId
 }
 
 const AcaoInteresseSchema = new Schema<IAcaoInteresse>({
@@ -16,6 +17,11 @@ const AcaoInteresseSchema = new Schema<IAcaoInteresse>({
         type: Number,
         required: true,
         default: 0
+    },
+    usuario: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'Usuario',
     }
 }, {
     toJSON: { virtuals: true },
@@ -31,6 +37,6 @@ AcaoInteresseSchema.set('toJSON', {
     }
 });
 
-const AcaoInteresse =  mongoose.model<IAcaoInteresse>('AcaoInteresse', AcaoInteresseSchema);
+const AcaoInteresse =  model<IAcaoInteresse>('AcaoInteresse', AcaoInteresseSchema);
 
 export default AcaoInteresse

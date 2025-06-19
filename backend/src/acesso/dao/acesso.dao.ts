@@ -2,6 +2,10 @@ import Usuario, {IUsuario} from "../model/Usuario";
 import {DadosAcesso} from "../interface/acesso.interface";
 
 export class AcessoDao {
+    async findById(id: string): Promise<IUsuario | null> {
+        return Usuario.findById(id)
+    }
+
     async obterDoEmail(email: string) : Promise<Array<IUsuario>> {
         return Usuario.find({email: email})
     }

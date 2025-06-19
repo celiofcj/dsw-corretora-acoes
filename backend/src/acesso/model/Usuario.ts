@@ -1,13 +1,14 @@
-import mongoose, {model, Schema, Document} from "mongoose";
+import {model, Schema, Document, Types} from "mongoose"
 
 export interface IUsuario extends Document {
-    _id: Schema.Types.ObjectId;
-    email: string;
-    senha: string;
-    falhasLogin: number;
-    token: string | null;
-    createdAt: Date;
-    updatedAt: Date;
+    _id: Types.ObjectId
+    email: string
+    senha: string
+    falhasLogin: number
+    token: string | null
+    createdAt: Date
+    updatedAt: Date
+    acoesInteresse: Types.ObjectId[]
 }
 
 const UsuarioAcessoSchema = new Schema<IUsuario>({
@@ -31,11 +32,16 @@ const UsuarioAcessoSchema = new Schema<IUsuario>({
         type: Number,
         required: true,
         default: 0
-    }
+    },
+    acoesInteresse: [{
+        type: Schema.Types.ObjectId,
+        ref: 'AcaoInteresse'
+    }]
+    
 }, {
     timestamps: true,
-});
+})
 
-const Usuario = model<IUsuario>('Usuario', UsuarioAcessoSchema);
+const Usuario = model<IUsuario>('Usuario', UsuarioAcessoSchema)
 
-export default Usuario;
+export default Usuario

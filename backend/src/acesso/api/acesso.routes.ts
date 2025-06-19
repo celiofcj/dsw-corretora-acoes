@@ -1,6 +1,6 @@
 import {Request, Response, Router} from "express";
 import {AcessoService} from "../service/AcessoService";
-import {ErroValidacao, ErroValidacaoMessage} from "../../exception/erros";
+import {ErroValidacao, ErroMessage} from "../../exception/erros";
 import {DadosAcesso, Token} from "../interface/acesso.interface";
 
 const router = Router();
@@ -17,7 +17,7 @@ router.post('/', (req: Request<{}, {}, DadosAcesso>, res) => {
         })
 })
 
-router.post('/login', (req: Request<{}, {}, DadosAcesso>, res: Response<Token | ErroValidacaoMessage>)=> {
+router.post('/login', (req: Request<{}, {}, DadosAcesso>, res: Response<Token | ErroMessage>)=> {
     acessoService.login(req.body)
         .then((resultado) => res.status(200).json(resultado))
         .catch((erro) => {

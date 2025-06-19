@@ -1,7 +1,7 @@
 import {Request, Response, Router} from "express";
 import {OrdemCompraService} from "../service/ordem-compra.service";
 import {IOrdemCompra} from "../interface/ordem-compra";
-import {ErroValidacao, ErroValidacaoMessage} from "../../exception/erros";
+import {ErroValidacao, ErroMessage} from "../../exception/erros";
 import {validarOrdemCompra} from "../validator/ordem-compra.validator";
 import {autenticarToken} from "../../security/auth.middleware";
 
@@ -16,7 +16,7 @@ router.get('/', (req : Request<{}, {}, void>, res: Response<Array<IOrdemCompra>>
         .then(resultado => res.status(200).json(resultado))
 })
 
-router.post('/', (req: Request<{}, {}, IOrdemCompra>, res: Response<IOrdemCompra | ErroValidacaoMessage | null>) => {
+router.post('/', (req: Request<{}, {}, IOrdemCompra>, res: Response<IOrdemCompra | ErroMessage | null>) => {
     try {
         validarOrdemCompra(req.body);
         ordemCompraService.salvarOrdemCompra(req.body)

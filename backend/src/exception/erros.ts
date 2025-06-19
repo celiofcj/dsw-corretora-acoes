@@ -1,3 +1,5 @@
+import {Error} from "mongoose";
+
 export class ErroValidacao extends Error{
 
     constructor(erros: Array<string>) {
@@ -8,6 +10,12 @@ export class ErroValidacao extends Error{
     }
 }
 
-export interface ErroValidacaoMessage{
+export class NotFoundError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+export interface ErroMessage {
     erro: string;
 }

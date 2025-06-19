@@ -11,8 +11,12 @@ export class AcessoDao {
     }
 
     async salvarComDadosAcesso(acesso: DadosAcesso): Promise<IUsuario> {
-        const usuarioAcesso = new Usuario(acesso);
+        const usuarioAcesso = new Usuario({email: acesso.email, senha: {texto: acesso.senha}});
 
         return usuarioAcesso.save()
+    }
+
+    async salvar(usuario: IUsuario): Promise<IUsuario> {
+        return usuario.save()
     }
 }

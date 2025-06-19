@@ -1,13 +1,13 @@
 import {Request, Response, Router} from "express";
 import {AcessoService} from "../service/AcessoService";
-import {ErroValidacao, ErroMessage} from "../../exception/erros";
+import {ErroMessage, ErroValidacao} from "../../exception/erros";
 import {DadosAcesso, Token} from "../interface/acesso.interface";
 
 const router = Router();
 
 const acessoService = new AcessoService();
 
-router.post('/', (req: Request<{}, {}, DadosAcesso>, res) => {
+router.post('/', (req: Request<{}, {}, DadosAcesso>, res: Response) => {
     acessoService.criarConta(req.body)
         .then(() => res.status(201).send())
         .catch((erro) => {

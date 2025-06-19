@@ -1,15 +1,32 @@
 import {model, Schema, Document, Types} from "mongoose"
 
+export interface ISenha {
+    texto: string
+    versao: number
+}
+
 export interface IUsuario extends Document {
     _id: Types.ObjectId
     email: string
-    senha: string
+    senha: ISenha
     falhasLogin: number
     token: string | null
     createdAt: Date
     updatedAt: Date
     acoesInteresse: Types.ObjectId[]
 }
+
+const SenhaSchema = new Schema<ISenha>({
+    texto: {
+        type: String,
+        required: true,
+    },
+    versao:{
+        type: Number,
+        required: true,
+        default: 1
+    }
+}, { _id: false })
 
 const UsuarioAcessoSchema = new Schema<IUsuario>({
     email: {
@@ -20,7 +37,7 @@ const UsuarioAcessoSchema = new Schema<IUsuario>({
         trim: true,
     },
     senha: {
-        type: String,
+        type: SenhaSchema,
         required: true,
     },
     token: {
@@ -37,7 +54,6 @@ const UsuarioAcessoSchema = new Schema<IUsuario>({
         type: Schema.Types.ObjectId,
         ref: 'AcaoInteresse'
     }]
-    
 }, {
     timestamps: true,
 })

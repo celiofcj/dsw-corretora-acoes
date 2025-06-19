@@ -1,11 +1,12 @@
 import {AcessoDao} from "../dao/acesso.dao"
 import {ErroValidacao} from "../../exception/erros"
-import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken";
 import {DadosAcesso, Token} from "../interface/acesso.interface";
+import {SenhaService} from "./SenhaService";
 
 export class AcessoService {
     private acessoDao = new AcessoDao()
+    private senhaService = new SenhaService()
 
     async login(dados: DadosAcesso): Promise<Token> {
         const usuarioAcesso = await this.acessoDao.obterDoEmail(dados.email)
@@ -21,20 +22,20 @@ export class AcessoService {
             throw new ErroValidacao(["Usuário bloqueado"])
         }
 
-        const senhaCorreta = await bcrypt.compare(dados.senha, usuarioAcesso.senha)
+        const senhaCorreta = await this.senhaService.validarSenha(dados.senha, usuarioAcesso.senha)
 
         if(!senhaCorreta) {
             usuarioAcesso.falhasLogin++
-            await this.acessoDao.salvarComDadosAcesso(usuarioAcesso)
+            await this.acessoDao.salvar(usuarioAcesso)
             throw new ErroValidacao(["Credenciais inválidas"])
         }
 
         if (usuarioAcesso.falhasLogin != 0) {
             usuarioAcesso.falhasLogin = 0
-            await this.acessoDao.salvarComDadosAcesso(usuarioAcesso)
+            await this.acessoDao.salvar(usuarioAcesso)
         }
 
-        const token = jwt.sign({ user_id: usuarioAcesso.id, email: usuarioAcesso.email }, 'aiusa7s8sdjm,d0-klaj', { expiresIn: "2h" })
+        const token = jwt.sign({ user_id: usuarioAcesso.id, email: usuarioAcesso.email, versaoSenha: usuarioAcesso.senha.versao }, 'aiusa7s8sdjm,d0-klaj', { expiresIn: "2h" })
 
         return {token}
     }
@@ -55,13 +56,12 @@ export class AcessoService {
             throw new ErroValidacao(errosValidacao)
         }
 
-        const senhaCriptografa = await bcrypt.hash(dados.senha, 10)
+        const senhaCriptografa = await this.senhaService.obterSenha(dados.senha)
 
         const paraSalvar: DadosAcesso = {
             email: dados.email,
             senha: senhaCriptografa
         }
-
         const usuario = await this.acessoDao.salvarComDadosAcesso(paraSalvar)
         console.log(`Usuario registrado: ${usuario}`)
     }

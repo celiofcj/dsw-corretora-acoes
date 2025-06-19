@@ -9,7 +9,7 @@ const acessoService = new AcessoService();
 
 router.post('/', (req: Request<{}, {}, DadosAcesso>, res) => {
     acessoService.criarConta(req.body)
-        .then(() => res.status(201).json({}))
+        .then(() => res.status(201).send())
         .catch((erro) => {
             if(erro instanceof ErroValidacao) {
                 res.status(400).json({erro: erro.message})

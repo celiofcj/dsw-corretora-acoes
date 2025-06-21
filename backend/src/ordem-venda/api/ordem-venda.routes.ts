@@ -31,12 +31,12 @@ router.post('/', (req: Request<{}, {}, IOrdemVenda>, res: Response<IOrdemVenda |
     }
 });
 
-router.post("/:id/executar", (req: Request<{ id: string }, {}, { PrecoExecucao: number }>, res: Response<IOrdemVenda | ErroMessage>) => {
+router.post("/:id/executar", (req: Request<{ id: string }, {}, { PrecoExecucao: number }>, res: Response<IOrdemVenda | ErroMessage>)  => {
     const idOrdemCompra = req.params.id;
     const { PrecoExecucao } = req.body;
 
     if (PrecoExecucao == null || PrecoExecucao <= 0) {
-        return res.status(400).json({
+        res.status(400).json({
             erro: "O corpo da requisição deve conter um PrecoExecucao maior que zero.",
         });
     }

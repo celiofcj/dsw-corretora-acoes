@@ -8,18 +8,11 @@ export class AcaoInteresseDao {
     }
 
     async obterTodas(userId: Types.ObjectId) : Promise<Array<IAcaoInteresse>> {
-        return AcaoInteresse.find({usuario: userId})
+        return AcaoInteresse.find({usuario: userId}).sort({ordem: 1})
     }
 
     async obterUma(id: string, userId: Types.ObjectId) : Promise<IAcaoInteresse | null> {
-        return AcaoInteresse.find({_id: id, usuario: userId})
-            .then((acoes) => {
-                if(acoes.length === 0) {
-                    return null
-                }
-
-                return acoes[0]
-            });
+        return AcaoInteresse.findOne({_id: id, usuario: userId})
     }
 
     async obterDoTicker(ticker: string, userId: Types.ObjectId) : Promise<IAcaoInteresse | null> {

@@ -1,5 +1,5 @@
 import {AcessoDao} from "../dao/acesso.dao"
-import {ErroValidacao} from "../../exception/erros"
+import {ErroValidacao} from "../../error/erros"
 import jwt from "jsonwebtoken";
 import {DadosAcesso, TrocaSenha, Token} from "../interface/acesso.interface";
 import {SenhaService} from "./SenhaService";

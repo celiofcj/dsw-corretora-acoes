@@ -1,44 +1,37 @@
-import {Request, Response, Router} from "express";
+import {NextFunction, Request, Response, Router} from "express";
 import {AcessoService} from "../service/AcessoService";
-import {AutenticacaoError, ErroMessage, ErroValidacao} from "../../exception/erros";
 import {DadosAcesso, Token, TrocaSenha} from "../interface/acesso.interface";
 import {autenticarToken} from "../../security/auth.middleware";
+import {errorHandler} from "../../error/error.middleware";
 
 const router = Router();
 
 const acessoService = new AcessoService();
 
-router.post('/', (req: Request<{}, {}, DadosAcesso>, res: Response) => {
+router.post('/', (req: Request<{},{}, DadosAcesso>, res: Response, next: NextFunction) => {
     acessoService.criarConta(req.body)
         .then(() => res.status(201).send())
         .catch((erro) => {
-            if(erro instanceof ErroValidacao) {
-                res.status(400).json({erro: erro.message})
-            }
+            next(erro)
         })
 })
 
-router.post('/login', (req: Request<{}, {}, DadosAcesso>, res: Response<Token | ErroMessage>)=> {
+router.post('/login', (req: Request<{}, {}, DadosAcesso>, res: Response<Token>, next: NextFunction)=> {
     acessoService.login(req.body)
         .then((resultado) => res.status(200).json(resultado))
         .catch((erro) => {
-            if(erro instanceof ErroValidacao) {
-                res.status(400).json({erro: erro.message})
-            }
+            next(erro)
         })
 })
 
-router.post('/trocarSenha', autenticarToken, (req: Request<{},{}, TrocaSenha>, res: Response) => {
+router.post('/trocarSenha', autenticarToken, (req: Request<{},{}, TrocaSenha>, res: Response, next: NextFunction) => {
     acessoService.trocarSenha(req.body, req.user!!)
         .then(() => res.status(204).send())
         .catch((erro) => {
-            if(erro instanceof ErroValidacao) {
-                res.status(400).json({erro: erro.message})
-            }
-            if(erro instanceof AutenticacaoError) {
-                res.status(403).send()
-            }
+            next(erro)
         })
 })
+
+router.use(errorHandler)
 
 export default router

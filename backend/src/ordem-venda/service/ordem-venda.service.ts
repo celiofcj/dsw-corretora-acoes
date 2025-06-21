@@ -1,7 +1,7 @@
 import {IOrdemVenda} from "../interface/ordem-venda";
 import { OrdemVendaDao } from "../dao/ordem-venda.dao";
 import OrdemCompra from "../../ordem-compra/interface/ordem-compra";
-import {ErroValidacao} from "../../exception/erros";
+import {ErroValidacao} from "../../error/erros";
 
 
 export class OrdemVendaService {

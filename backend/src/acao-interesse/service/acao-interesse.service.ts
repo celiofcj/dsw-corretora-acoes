@@ -2,7 +2,7 @@ import {IAcaoInteresse} from "../interface/AcaoInteresse"
 import {AcaoInteresseDao} from "../dao/acao-interesse.dao"
 import {UserData} from "../../security/UserData"
 import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
-import {NotFoundError} from "../../exception/erros";
+import {NotFoundError} from "../../error/erros";
 
 export class AcaoInteresseService {
     private acaoInteresseDao = new AcaoInteresseDao()

@@ -1,5 +1,5 @@
 import { IOrdemCompra } from "../interface/ordem-compra";
-import { ErroValidacao } from "../../exception/erros";
+import { ErroValidacao } from "../../error/erros";
 
 export function validarOrdemCompra(dados: IOrdemCompra): void {
     const erros: string[] = [];

@@ -1,7 +1,7 @@
 import {AcessoDao} from "../dao/acesso.dao";
 import {UserData} from "../../security/UserData";
 import {IUsuario} from "../model/Usuario";
-import {AutenticacaoError} from "../../exception/erros";
+import {AutenticacaoError} from "../../error/erros";
 
 export class UsuarioLogadoService {
     private acessoDao = new AcessoDao()

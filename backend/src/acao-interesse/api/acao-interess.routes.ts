@@ -1,7 +1,8 @@
 import {NextFunction, Request, Response, Router} from "express";
-import {AcaoInteresseService} from "../service/acao-interesse.service";
-import {IAcaoInteresse} from "../interface/AcaoInteresse";
+import {AcaoInteresseService} from "../service/AcaoInteresseService";
+import {IAcaoInteresse} from "../model/AcaoInteresse";
 import {autenticarToken} from "../../security/auth.middleware";
+import {errorHandler} from "../../error/error.middleware";
 
 const router = Router()
 
@@ -52,5 +53,7 @@ router.post('/:id/descer', (req, res: Response<IAcaoInteresse>, next: NextFuncti
             next(erro)
         })
 })
+
+router.use(errorHandler)
 
 export default router

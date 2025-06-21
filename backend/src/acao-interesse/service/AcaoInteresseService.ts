@@ -1,17 +1,30 @@
-import {IAcaoInteresse} from "../interface/AcaoInteresse"
+import {IAcaoInteresse} from "../model/AcaoInteresse"
 import {AcaoInteresseDao} from "../dao/acao-interesse.dao"
 import {UserData} from "../../security/UserData"
 import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
-import {NotFoundError} from "../../error/erros";
+import {ErroValidacao, NotFoundError} from "../../error/erros";
 
 export class AcaoInteresseService {
     private acaoInteresseDao = new AcaoInteresseDao()
     private usuarioLogadoService = new UsuarioLogadoService()
 
     async salvarAcaoInteresse(acaoInteresse: IAcaoInteresse, userData: UserData): Promise<IAcaoInteresse> {
-        return this.usuarioLogadoService.obterUsuarioLogado(userData)
+        const erros = this.validarAcaoInteresse(acaoInteresse)
+        if(erros.length > 0) {
+            throw new ErroValidacao(erros)
+        }
+
+        await this.usuarioLogadoService.obterUsuarioLogado(userData)
             .then(usuario => {
                 acaoInteresse.usuario = usuario._id
+            })
+
+        return this.validarUnicidadeAcaoInteresse(acaoInteresse)
+            .then(erro => {
+                if(erro.length > 0) {
+                    throw new ErroValidacao(erro)
+                }
+
                 return this.acaoInteresseDao.salvarAcaoInteresse(acaoInteresse)
             })
     }
@@ -100,6 +113,31 @@ export class AcaoInteresseService {
                 acaoParaTrocar.ordem = ordemOriginal
                 this.acaoInteresseDao.salvarAcaoInteresse(acaoParaTrocar)
                 return acaoAtualizada
+            })
+    }
+
+    private validarAcaoInteresse(acaoInteresse: IAcaoInteresse) {
+        const erros = new Array<string>
+        if(acaoInteresse == null) {
+            erros.push('Ação interesse não pode ser nulo')
+            return erros
+        }
+
+        if(acaoInteresse.ticker == null) {
+            erros.push('Ticker não pode ser nulo')
+        }
+
+        return erros
+    }
+
+    private async validarUnicidadeAcaoInteresse(acaoInteresse: IAcaoInteresse): Promise<Array<string>> {
+        return this.acaoInteresseDao.obterDoTicker(acaoInteresse.ticker, acaoInteresse.usuario._id)
+            .then(acao => {
+                if (acao) {
+                    return [`A ação de interesse ${acaoInteresse.ticker} já está salva`]
+                }
+
+                return []
             })
     }
 }

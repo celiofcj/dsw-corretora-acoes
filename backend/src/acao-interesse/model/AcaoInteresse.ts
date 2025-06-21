@@ -28,6 +28,28 @@ const AcaoInteresseSchema = new Schema<IAcaoInteresse>({
     toObject: { virtuals: true }
 });
 
+AcaoInteresseSchema.pre('save', async function(next) {
+    if (this.isNew) {
+        try {
+            const lastAcaoInteresse = await (this.constructor as typeof AcaoInteresse)
+                .findOne({ usuario: this.usuario })
+                .sort({ ordem: -1 })
+                .limit(1);
+
+            if (lastAcaoInteresse) {
+                this.ordem = lastAcaoInteresse.ordem + 1;
+            } else {
+                this.ordem = 0;
+            }
+            next();
+        } catch (error: any) {
+            next(error);
+        }
+    } else {
+        next();
+    }
+});
+
 AcaoInteresseSchema.set('toJSON', {
     virtuals: false,
     versionKey: false,

@@ -1,4 +1,4 @@
-import AcaoInteresse, {IAcaoInteresse} from "../interface/AcaoInteresse";
+import AcaoInteresse, {IAcaoInteresse} from "../model/AcaoInteresse";
 import {Types} from "mongoose";
 
 export class AcaoInteresseDao {
@@ -20,6 +20,10 @@ export class AcaoInteresseDao {
 
                 return acoes[0]
             });
+    }
+
+    async obterDoTicker(ticker: string, userId: Types.ObjectId) : Promise<IAcaoInteresse | null> {
+        return AcaoInteresse.findOne({ticker, usuario: userId})
     }
 
     async obterDaOrdem(ordem: number, userId: Types.ObjectId): Promise<Array<IAcaoInteresse>> {

@@ -1,39 +1,67 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IOrdemVenda extends Document {
-    ticker: string;
-    quantidade: number;
-    modo: "agendado" | "imediato";
-    precoReferencia: number;
-    executada: boolean;
+    DataHora: Date;
+    Ticker: string;
+    Quantidade: number;
+    Modo: string; // "IMEDIATO" ou "ESPERA"
+    Executada: boolean;
+    PrecoExecucao?: number;
+    PrecoReferenciaVenda?: number;
+    DataHoraExecucao?: Date;
+    UsuarioID: mongoose.Types.ObjectId;
+}
 
+export interface IOrdemVendaExecucao {
+    PrecoExecucao: number
 }
 
 const OrdemVendaSchema = new Schema<IOrdemVenda>({
-    ticker: {
+    DataHora: {
+        type: Date,
+        required: true
+    },
+    Ticker: {
         type: String,
         required: true,
         trim: true,
         uppercase: true
     },
-    quantidade: {
+    Quantidade: {
         type: Number,
         required: true,
-        default: 0
+        min: 1
     },
-    modo: {
+    Modo: {
         type: String,
-        enum: ["agendado", "imediato"],
-        required: true
-    },
-    precoReferencia: {
-        type: Number,
         required: true,
-        default: 0
+        trim: true,
+        uppercase: true
     },
-    executada: {
+    Executada: {
         type: Boolean,
-        required: true }
+        required: true,
+        default: false
+    },
+    PrecoExecucao: {
+        type: Number,
+        required: false,
+        min: 0
+    },
+    PrecoReferenciaVenda: {
+        type: Number,
+        required: false,
+        min: 0
+    },
+    DataHoraExecucao: {
+        type: Date,
+        required: false
+    },
+    UsuarioID: {
+        type: Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -44,15 +72,12 @@ OrdemVendaSchema.set('toJSON', {
     virtuals: false,
     versionKey: false,
     transform: (_, ret) => {
-        // Se quiser a opção 1, só remova __v:
-        // delete ret.__v;
-
-        // Se quiser a opção 2, converta _id para id:
         ret.id = ret._id;
         delete ret._id;
     }
 });
 
-const OrdemVenda = mongoose.model<IOrdemVenda>("OrdemVenda", OrdemVendaSchema);
+const OrdemVenda = mongoose.model<IOrdemVenda>('OrdemVenda', OrdemVendaSchema);
 
 export default OrdemVenda;
+

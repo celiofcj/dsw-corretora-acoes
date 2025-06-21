@@ -3,6 +3,7 @@ import acaoInteresseRouter from "./acao-interesse/api/acao-interess.routes";
 import acessoRouter from "./acesso/api/acesso.routes"
 import {start} from "./config/startup";
 import ordemCompraRouter from "./ordem-compra/api/ordem-compra.routes";
+import ordemVendaRouter from "./ordem-venda/api/ordem-venda.routes";
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,8 @@ app.use('/acesso', acessoRouter)
 app.use('/acaoInteresse', acaoInteresseRouter)
 
 app.use('/ordemCompra', ordemCompraRouter)
+
+app.use('/ordemVenda', ordemVendaRouter)
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

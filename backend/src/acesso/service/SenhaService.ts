@@ -25,16 +25,21 @@ export class SenhaService {
 
     validarFormatoSenha(senha: string): Array<string> {
         const array = new Array<string>
-        if(senha === null) {
-            array.push('Senha não pode ser nula')
+        if(senha == null) {
+            array.push('Senha não pode estar vazia')
+            return array
         }
 
         if (senha.length < 8) {
             array.push('Senha não pode ter menos de 8 caracteres')
         }
 
-        if(!/.*[a-zA-Z].*$/.test(senha) && /.*[0-9].*$/.test(senha)) {
-            array.push('Senha deve ter pelo menos uma letra e um número')
+        if(!(/.*[a-zA-Z].*$/.test(senha))) {
+            array.push('Senha deve ter pelo menos uma letra')
+        }
+
+        if(!(/.*[0-9].*$/.test(senha))) {
+            array.push('Senha deve ter pelo menos um número')
         }
 
         return array

@@ -88,8 +88,9 @@ export class AcessoService {
     private validarFormatoEmail(email: string): Array<string> {
         const array = new Array<string>
         const regex = /^\S+@\S+\.\S+$/
-        if(email === null) {
+        if(email == null) {
             array.push('Email não pode ser nulo')
+            return array
         }
 
         if(!regex.test(email)){

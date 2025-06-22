@@ -38,6 +38,27 @@ export class CarteiraService {
             })
     }
 
+    async venderAcoes(transacao: TransacaoAcao): Promise<void> {
+        const valorTransacao = transacao.valorUnitario * transacao.quantidade
+        await this.contaCorrenteService.registrarMovimentacao({
+            valor: valorTransacao,
+            descricao: `VENDA DE ${transacao.quantidade} AÇÕES DE ${transacao.ticker} NO VALOR UNITÁRIO DE ${transacao.valorUnitario}`,
+            tipo: 'VENDA DE AÇÕES'
+        })
+
+        await this.carteiraDao.obterDoTicker(transacao.ticker, transacao.usuario)
+            .then(item => {
+                if(item) {
+                    item.precoVenda = (item.precoVenda ?? 0) + valorTransacao
+                    item.quantidadeVendida = (item.quantidadeVendida ?? 0) + transacao.quantidade
+
+                    return this.carteiraDao.salvar(item)
+                }
+
+                return this.carteiraDao.registrarTransacao(transacao)
+            })
+    }
+
 
     private calcularPrecoMedioCompra(carteira: ICarteira, transacao: TransacaoAcao, ): number {
         if(carteira.quantidade === 0) {

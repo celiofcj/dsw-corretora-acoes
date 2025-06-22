@@ -1,13 +1,14 @@
-import mongoose, {Schema, Document, Types} from "mongoose";
+import mongoose, {Document, Schema, Types} from "mongoose";
+import {PedidoOrdemCompra} from "../interface/ordem-compra.interface";
 
 export interface IOrdemCompra extends Document {
-    dataHora : Date;
     ticker : string;
     quantidade : number;
-    executada : boolean;
-    precoExecucao : number;
-    precoReferenciaCompra : number;
-    dataHoraExecucao : Date;
+    executada: boolean;
+    dataHora : Date;
+    precoReferenciaCompra: number;
+    dataHoraExecucao?: Date;
+    precoExecucao?: number;
     usuario: Types.ObjectId;
 }
 
@@ -58,5 +59,18 @@ const OrdemCompraSchema = new Schema<IOrdemCompra>({
 });
 
 const OrdemCompra =  mongoose.model<IOrdemCompra>('OrdemCompra', OrdemCompraSchema);
+
+export function fromPedido (pedido: PedidoOrdemCompra, userId: Types.ObjectId): IOrdemCompra {
+    return new OrdemCompra({
+        ticker: pedido.ticker,
+        quantidade: pedido.quantidade,
+        executada: pedido.executada,
+        dataHora: pedido.dataHora,
+        precoReferenciaCompra: pedido.preco,
+        dataHoraExecucao: pedido.executada ? pedido.dataHora : null,
+        precoExecucao: pedido.executada ? pedido.preco : null,
+        usuario: userId
+    })
+}
 
 export default OrdemCompra

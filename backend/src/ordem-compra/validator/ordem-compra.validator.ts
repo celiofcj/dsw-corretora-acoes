@@ -1,6 +1,6 @@
 import { IOrdemCompra } from "../model/OrdemCompra";
 import { ErroValidacao } from "../../error/erros";
-import {PedidoOrdemCompra} from "../interface/ordem-compra.interface";
+import {PedidoExecucaoOrdemCompra, PedidoOrdemCompra} from "../interface/ordem-compra.interface";
 
 export function validarOrdemCompra(dados: IOrdemCompra) {
     const erros: string[] = [];
@@ -27,10 +27,6 @@ export function validarOrdemCompra(dados: IOrdemCompra) {
         if (!dados.dataHoraExecucao) {
             erros.push("Data de execução é obrigatória para ordens executadas.");
         }
-        // if (!dados.executada) {
-        //     erros.push("Já deve ter sido executada.");
-        // }
-
         return erros
     }
 
@@ -38,11 +34,6 @@ export function validarOrdemCompra(dados: IOrdemCompra) {
     if (dados.precoReferenciaCompra == null || dados.precoReferenciaCompra <= 0) {
         erros.push("Preço de referência inválido.");
     }
-
-    // if (dados.precoExecucao != null && dados.precoExecucao <= 0) {
-    //     erros.push("Preço de execução deve ser maior que 0.");
-    // }
-
 
     if (erros.length > 0) {
         throw new ErroValidacao(erros);
@@ -70,6 +61,22 @@ export function validarPedidoOrdemCompra(dados: PedidoOrdemCompra){
 
     if (dados.dataHora == null) {
         erros.push("Data e hora é obrigatória.");
+    }
+
+    if (erros.length > 0) {
+        throw new ErroValidacao(erros);
+    }
+}
+
+export function validarPedidoExecucao(dados: PedidoExecucaoOrdemCompra) {
+    const erros: string[] = [];
+
+    if (dados.dataHora == null) {
+        erros.push("Data e hora é obrigatória.");
+    }
+
+    if (dados.preco == null || dados.preco <= 0) {
+        erros.push("Preço é obrigatório e deve ser maior que 0.");
     }
 
     if (erros.length > 0) {

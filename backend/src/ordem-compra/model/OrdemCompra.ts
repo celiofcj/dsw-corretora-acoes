@@ -53,10 +53,20 @@ const OrdemCompraSchema = new Schema<IOrdemCompra>({
         required: true
     }
 }, {
-    timestamps: true,
+    timestamps: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
+
+OrdemCompraSchema.set('toJSON', {
+    virtuals: false,
+    versionKey: false,
+    transform: (_, ret) => {
+        ret.id = ret._id;
+        delete ret._id;
+    }
+});
+
 
 const OrdemCompra =  mongoose.model<IOrdemCompra>('OrdemCompra', OrdemCompraSchema);
 

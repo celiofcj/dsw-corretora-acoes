@@ -5,3 +5,8 @@ export interface PedidoOrdemCompra {
     executada?: boolean
     dataHora: Date
 }
+
+export interface PedidoExecucaoOrdemCompra {
+    preco: number
+    dataHora: Date
+}

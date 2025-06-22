@@ -2,10 +2,11 @@ import {fromPedido, IOrdemCompra} from "../model/OrdemCompra";
 import {OrdemCompraDao} from "../dao/ordem-compra.dao";
 import {UserData} from "../../security/UserData";
 import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
-import {validarPedidoOrdemCompra} from "../validator/ordem-compra.validator";
+import {validarPedidoExecucao, validarPedidoOrdemCompra} from "../validator/ordem-compra.validator";
 import {CarteiraService} from "../../carteira/service/CarteiraService";
 import {TransacaoAcao} from "../../carteira/carteira.interface";
-import {PedidoOrdemCompra} from "../interface/ordem-compra.interface";
+import {PedidoExecucaoOrdemCompra, PedidoOrdemCompra} from "../interface/ordem-compra.interface";
+import {TransacaoError, NotFoundError} from "../../error/erros";
 
 export class OrdemCompraService{
     private ordemCompraDao = new OrdemCompraDao()
@@ -13,12 +14,12 @@ export class OrdemCompraService{
     private carteiraService = new CarteiraService()
 
     async criarOrdemCompra(pedido : PedidoOrdemCompra, userData: UserData): Promise<IOrdemCompra> {
-        validarPedidoOrdemCompra(pedido)
-
         const usuario = await this.usuarioLogadoService.obterUsuarioLogado(userData)
             .then(usuario => {
                 return usuario
             })
+
+        validarPedidoOrdemCompra(pedido)
 
         const ordemCompra = fromPedido(pedido, usuario._id)
 
@@ -39,8 +40,34 @@ export class OrdemCompraService{
             })
     }
 
-    async executarOrdemCompra(id : string, ordemCompra : IOrdemCompra, userData: UserData): Promise<IOrdemCompra> {
-        return this.ordemCompraDao.executarOrdemCompra(id, ordemCompra);
+    async executarOrdemCompra(id : string, pedidoExecucao : PedidoExecucaoOrdemCompra, userData: UserData): Promise<IOrdemCompra> {
+        const usuario = await this.usuarioLogadoService.obterUsuarioLogado(userData)
+            .then(usuario => {
+                return usuario
+            })
+
+        validarPedidoExecucao(pedidoExecucao)
+
+        const ordemCompra = await this.ordemCompraDao.obterUma(id, usuario._id)
+            .then(ordemCompraRegistrada => {
+                if(!ordemCompraRegistrada) {
+                    throw new NotFoundError(`Não há ordem de compra registrada com o id ${id}`)
+                }
+
+                if(ordemCompraRegistrada.executada) {
+                    throw new TransacaoError(`A negociação com id ${id} já foi executada`)
+                }
+
+                ordemCompraRegistrada.executada = true
+                ordemCompraRegistrada.precoExecucao = pedidoExecucao.preco
+                ordemCompraRegistrada.dataHoraExecucao = pedidoExecucao.dataHora
+
+                return ordemCompraRegistrada
+            })
+
+        await this.executarCompra(ordemCompra)
+
+        return await this.ordemCompraDao.salvarOrdemCompra(ordemCompra)
     }
 
     private async executarCompra(ordemCompra : IOrdemCompra): Promise<void> {

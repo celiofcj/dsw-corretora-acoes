@@ -11,11 +11,11 @@ export class OrdemCompraDao {
         return OrdemCompra.find({usuario: userId})
     }
 
-    async executarOrdemCompra(id: string, dadosExecucao: IOrdemCompra): Promise<IOrdemCompra> {
-        const atualizado = await OrdemCompra.findByIdAndUpdate(id, dadosExecucao, { new: true }).exec();
-        if (!atualizado) {
-            throw new Error(`Ordem de compra com id ${id} não encontrada.`);
+    async obterUma(id: string, userId:Types.ObjectId) : Promise<IOrdemCompra | null> {
+        if (!Types.ObjectId.isValid(id)) {
+            return null;
         }
-        return atualizado;
+
+        return OrdemCompra.findOne({_id: id, usuario: userId})
     }
 }

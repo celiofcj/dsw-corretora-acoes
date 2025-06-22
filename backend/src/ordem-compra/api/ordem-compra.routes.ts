@@ -3,7 +3,7 @@ import {OrdemCompraService} from "../service/OrdemCompraService";
 import {IOrdemCompra} from "../model/OrdemCompra";
 import {autenticarToken} from "../../security/auth.middleware";
 import {errorHandler} from "../../error/error.middleware";
-import {PedidoOrdemCompra} from "../interface/ordem-compra.interface";
+import {PedidoExecucaoOrdemCompra, PedidoOrdemCompra} from "../interface/ordem-compra.interface";
 
 const router  = Router();
 
@@ -27,13 +27,13 @@ router.post('/', (req: Request<{}, {}, PedidoOrdemCompra>, res: Response<IOrdemC
             })
 })
 
-// router.post('/:id/executar', (req: Request<{id: string}, {}, PedidoExecucaoOrdemCompra>, res: Response<IOrdemCompra>, next: NextFunction) => {
-//     ordemCompraService.executarOrdemCompra(req.params.id, req.body, req.user!!)
-//         .then(salvo => res.status(201).json(salvo))
-//         .catch((erro) => {
-//             next(erro)
-//         })
-// })
+router.post('/:id/executar', (req: Request<{id: string}, {}, PedidoExecucaoOrdemCompra>, res: Response<IOrdemCompra>, next: NextFunction) => {
+    ordemCompraService.executarOrdemCompra(req.params.id, req.body, req.user!!)
+        .then(salvo => res.status(201).json(salvo))
+        .catch((erro) => {
+            next(erro)
+        })
+})
 
 router.use(errorHandler)
 

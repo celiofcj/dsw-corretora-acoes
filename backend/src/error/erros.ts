@@ -41,3 +41,13 @@ export class AutenticacaoError extends ResponsibleError {
     }
 }
 
+export class TransacaoError extends ResponsibleError {
+    constructor(message: string) {
+        super(message);
+    }
+
+    response(res: Response): Response<ErrorMessage> {
+        return res.status(400).json({erros: [this.message]})
+    }
+}
+

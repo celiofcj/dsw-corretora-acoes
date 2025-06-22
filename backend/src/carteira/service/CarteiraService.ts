@@ -2,13 +2,19 @@ import {CarteiraDao} from "../dao/carteira.dao";
 import {ContaCorrenteService} from "../../conta-corrente/service/ContaCorrenteService";
 import {TransacaoAcao} from "../carteira.interface";
 import {ICarteira} from "../model/Carteira";
+import {UserData} from "../../security/UserData";
+import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
 
 export class CarteiraService {
     private carteiraDao = new CarteiraDao() ;
     private contaCorrenteService = new ContaCorrenteService()
+    private usuarioLogadoService = new UsuarioLogadoService()
 
-    async obtemCarteiras(): Promise<Array<ICarteira>> {
-        return this.carteiraDao.obterTodas();
+    async obtemCarteiras(userData: UserData): Promise<Array<ICarteira>> {
+        return this.usuarioLogadoService.obterUsuarioLogado(userData)
+            .then(usuario => {
+                return this.carteiraDao.obterTodas(usuario.id);
+            })
     }
 
     async comprarAcoes(transacao: TransacaoAcao): Promise<void> {

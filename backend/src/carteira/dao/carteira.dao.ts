@@ -3,8 +3,8 @@ import {Types} from "mongoose";
 import {TransacaoAcao} from "../carteira.interface";
 
 export class CarteiraDao {
-    async obterTodas() : Promise<Array<ICarteira>> {
-        return Carteira.find()
+    async obterTodas(userId: Types.ObjectId) : Promise<Array<ICarteira>> {
+        return Carteira.find({usuario: userId})
     }
 
     async obterDoTicker(ticker: string, userId: Types.ObjectId): Promise<ICarteira | null> {

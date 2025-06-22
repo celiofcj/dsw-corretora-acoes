@@ -1,8 +1,13 @@
 import Usuario, {IUsuario} from "../model/Usuario";
 import {DadosAcesso} from "../interface/acesso.interface";
+import {Types} from "mongoose";
 
 export class AcessoDao {
     async findById(id: string): Promise<IUsuario | null> {
+        if (!Types.ObjectId.isValid(id)) {
+            return null;
+        }
+
         return Usuario.findById(id)
     }
 

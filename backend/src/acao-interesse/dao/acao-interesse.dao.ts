@@ -12,6 +12,10 @@ export class AcaoInteresseDao {
     }
 
     async obterUma(id: string, userId: Types.ObjectId) : Promise<IAcaoInteresse | null> {
+        if (!Types.ObjectId.isValid(id)) {
+            return null;
+        }
+
         return AcaoInteresse.findOne({_id: id, usuario: userId})
     }
 

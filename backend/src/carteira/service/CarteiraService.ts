@@ -1,0 +1,44 @@
+import {CarteiraDao} from "../dao/carteira.dao";
+import {ContaCorrenteService} from "../../conta-corrente/service/ContaCorrenteService";
+import {TransacaoAcao} from "../carteira.interface";
+import {ICarteira} from "../model/Carteira";
+
+export class CarteiraService {
+    private carteiraDao = new CarteiraDao() ;
+    private contaCorrenteService = new ContaCorrenteService()
+
+    async obtemCarteiras(): Promise<Array<ICarteira>> {
+        return this.carteiraDao.obterTodas();
+    }
+
+    async comprarAcoes(transacao: TransacaoAcao): Promise<void> {
+        const valorTransacao = transacao.valorUnitario * transacao.quantidade
+        await this.contaCorrenteService.registrarMovimentacao({
+            valor: valorTransacao,
+            descricao: `COMPRA DE ${transacao.quantidade} AÇÕES DE ${transacao.ticker} NO VALOR UNITÁRIO DE ${transacao.valorUnitario}`,
+            tipo: 'COMPRA DE AÇÕES'
+        })
+
+        await this.carteiraDao.obterDoTicker(transacao.ticker, transacao.usuario)
+            .then(item => {
+                if(item) {
+                    item.precoCompra = this.calcularPrecoMedioCompra(item, transacao)
+                    item.quantidade = item.quantidade + transacao.quantidade
+
+                    return this.carteiraDao.salvar(item)
+                }
+
+                return this.carteiraDao.registrarTransacao(transacao)
+            })
+    }
+
+
+    private calcularPrecoMedioCompra(carteira: ICarteira, transacao: TransacaoAcao, ): number {
+        if(carteira.quantidade === 0) {
+            return transacao.valorUnitario
+        }
+
+        const quantidadeTotal = carteira.quantidade + transacao.quantidade
+        return ((carteira.quantidade * carteira.precoCompra) + (transacao.quantidade * transacao.valorUnitario)) / quantidadeTotal
+    }
+}

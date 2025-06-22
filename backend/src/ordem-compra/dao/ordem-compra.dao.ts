@@ -1,4 +1,5 @@
-import OrdemCompra, {IOrdemCompra} from "../interface/ordem-compra";
+import OrdemCompra, {IOrdemCompra} from "../model/OrdemCompra";
+import {Types} from "mongoose";
 
 export class OrdemCompraDao {
     async salvarOrdemCompra(dados: IOrdemCompra): Promise<IOrdemCompra> {
@@ -6,8 +7,8 @@ export class OrdemCompraDao {
         return ordemCompra.save()
     }
 
-    async obterTodas() : Promise<Array<IOrdemCompra>> {
-        return  OrdemCompra.find()
+    async obterTodas(userId: Types.ObjectId) : Promise<Array<IOrdemCompra>> {
+        return OrdemCompra.find({usuario: userId})
     }
 
     async executarOrdemCompra(id: string, dadosExecucao: IOrdemCompra): Promise<IOrdemCompra> {

@@ -1,59 +1,52 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, {Schema, Document, Types} from "mongoose";
 
 export interface IOrdemCompra extends Document {
-    DataHora : Date;
-    Ticker : string;
-    Quantidade : number;
-    Modo : string;
-    Executada : boolean;
-    PrecoExecucao : number;
-    PrecoReferenciaCompra : number;
-    DataHoraExecucao : Date;
-    UsuarioID: mongoose.Types.ObjectId;
+    dataHora : Date;
+    ticker : string;
+    quantidade : number;
+    executada : boolean;
+    precoExecucao : number;
+    precoReferenciaCompra : number;
+    dataHoraExecucao : Date;
+    usuario: Types.ObjectId;
 }
 
 const OrdemCompraSchema = new Schema<IOrdemCompra>({
-    DataHora: {
+    dataHora: {
         type: Date,
         required: true
     },
-    Ticker: {
+    ticker: {
         type: String,
         required: true,
         trim: true,
         uppercase: true
     },
-    Quantidade: {
+    quantidade: {
         type: Number,
         required: true,
         min: 1
     },
-    Modo: {
-        type: String,
-        required: true,
-        trim: true,
-        uppercase: true
-    },
-    Executada: {
+    executada: {
         type: Boolean,
         required: true,
         default: false
     },
-    PrecoExecucao: {
+    precoExecucao: {
         type: Number,
         required: false,
         min: 0
     },
-    PrecoReferenciaCompra: {
+    precoReferenciaCompra: {
         type: Number,
         required: false,
         min: 0
     },
-    DataHoraExecucao: {
+    dataHoraExecucao: {
         type: Date,
         required: false
     },
-    UsuarioID: {
+    usuario: {
         type: Schema.Types.ObjectId,
         ref: 'Usuario',
         required: true

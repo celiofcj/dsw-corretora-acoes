@@ -1,36 +1,45 @@
-import mongoose, {Schema, Document} from "mongoose";
+import mongoose, {Schema, Document, Types} from "mongoose";
 
-export interface ICarteira {
-    Ticker: string;
-    Quantidade: number;
-    PrecoCompra: number;
-    UsuarioID: mongoose.Types.ObjectId;
+export interface ICarteira extends Document {
+    ticker: string;
+    quantidade: number;
+    precoCompra: number;
+    quantidadeVendida?: number;
+    precoVenda?: number;
+    usuario: Types.ObjectId;
 }
 
 const CarteiraSchema = new Schema<ICarteira>({
-    Ticker: {
+    ticker: {
         type: String,
         required: true,
         trim: true,
         uppercase: true
     },
-    Quantidade: {
+    quantidade: {
         type: Number,
         required: true,
         min: 1
     },
-    PrecoCompra: {
+    precoCompra: {
         type: Number,
-        required: false,
+        required: true,
         min: 0
     },
-    UsuarioID: {
+    quantidadeVendida: {
+        type: Number,
+        min: 1
+    },
+    precoVenda: {
+        type: Number,
+        min: 0
+    },
+    usuario: {
         type: Schema.Types.ObjectId,
         ref: 'Usuario',
         required: true
     }
 }, {
-    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 })

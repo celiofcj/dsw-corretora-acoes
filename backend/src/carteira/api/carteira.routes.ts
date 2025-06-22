@@ -1,7 +1,7 @@
 import {autenticarToken} from "../../security/auth.middleware";
 import {Router, Request, Response, NextFunction} from 'express';
-import {CarteiraService} from "../service/carteira.service";
-import {ICarteira} from "../interface/carteira";
+import {CarteiraService} from "../service/CarteiraService";
+import {ICarteira} from "../model/Carteira";
 import {errorHandler} from "../../error/error.middleware";
 
 const router = Router();

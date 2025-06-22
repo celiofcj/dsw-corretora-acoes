@@ -1,6 +1,6 @@
 import {IOrdemVenda} from "../interface/ordem-venda";
 import { OrdemVendaDao } from "../dao/ordem-venda.dao";
-import OrdemCompra from "../../ordem-compra/interface/ordem-compra";
+import OrdemCompra from "../../ordem-compra/model/OrdemCompra";
 import {ErroValidacao} from "../../error/erros";
 
 
@@ -39,9 +39,9 @@ export class OrdemVendaService {
             Executada: true,
             DataHoraExecucao: new Date(),
             Modo: "IMEDIATO",
-            Ticker: compra.Ticker,
-            Quantidade: compra.Quantidade,
-            UsuarioID: compra.UsuarioID,
+            Ticker: compra.ticker,
+            Quantidade: compra.quantidade,
+            UsuarioID: compra.usuario,
         } as IOrdemVenda;
 
         return this.ordemVendaDao.salvarOrdemVenda(novaOrdem);

@@ -10,3 +10,13 @@ export interface Token {
 export interface TrocaSenha {
     senha: string
 }
+
+export interface TokenNovaSenha {
+    email: string
+}
+
+export interface RecuperarSenha {
+    email: string
+    token: string
+    senha: string
+}

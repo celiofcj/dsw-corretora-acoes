@@ -14,6 +14,7 @@ export interface IUsuario extends Document {
     createdAt: Date
     updatedAt: Date
     acoesInteresse: Types.ObjectId[]
+    codigoRecuperacaoSenha: string | null
 }
 
 const SenhaSchema = new Schema<ISenha>({
@@ -53,7 +54,10 @@ const UsuarioAcessoSchema = new Schema<IUsuario>({
     acoesInteresse: [{
         type: Schema.Types.ObjectId,
         ref: 'AcaoInteresse'
-    }]
+    }],
+    codigoRecuperacaoSenha: {
+        type: String
+    }
 }, {
     timestamps: true,
 })

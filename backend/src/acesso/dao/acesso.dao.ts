@@ -11,8 +11,8 @@ export class AcessoDao {
         return Usuario.findById(id)
     }
 
-    async obterDoEmail(email: string) : Promise<Array<IUsuario>> {
-        return Usuario.find({email: email})
+    async obterDoEmail(email: string) : Promise<IUsuario | null> {
+        return Usuario.findOne({email: email})
     }
 
     async salvarComDadosAcesso(acesso: DadosAcesso): Promise<IUsuario> {

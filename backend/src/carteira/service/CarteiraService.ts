@@ -4,6 +4,7 @@ import {TransacaoAcao} from "../carteira.interface";
 import {ICarteira} from "../model/Carteira";
 import {UserData} from "../../security/UserData";
 import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
+import {IMovimentacao} from "../../conta-corrente/model/Movimentacao";
 
 export class CarteiraService {
     private carteiraDao = new CarteiraDao() ;
@@ -19,11 +20,16 @@ export class CarteiraService {
 
     async comprarAcoes(transacao: TransacaoAcao): Promise<void> {
         const valorTransacao = transacao.valorUnitario * transacao.quantidade
-        await this.contaCorrenteService.registrarMovimentacao({
+
+        const movimentacao: IMovimentacao = {
             valor: valorTransacao,
-            descricao: `COMPRA DE ${transacao.quantidade} AÇÕES DE ${transacao.ticker} NO VALOR UNITÁRIO DE ${transacao.valorUnitario}`,
-            tipo: 'COMPRA DE AÇÕES'
-        })
+            tipo: "compra de ações",
+            descricao: `COMPRA DE ${transacao.quantidade} AÇÕES DE ${transacao.ticker} A R$${transacao.valorUnitario}`,
+            dataHora: new Date(),
+            usuario: transacao.usuario
+        };
+
+        await this.contaCorrenteService.registrarMovimentacao(movimentacao);
 
         await this.carteiraDao.obterDoTicker(transacao.ticker, transacao.usuario)
             .then(item => {

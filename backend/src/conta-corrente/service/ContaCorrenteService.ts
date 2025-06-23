@@ -5,6 +5,7 @@ import {ContaCorrenteDao} from "../dao/ContaCorrenteDao";
 import {TransacaoError} from "../../error/erros";
 import {Types} from "mongoose";
 import {IContaCorrente} from "../model/ContaCorrente";
+import {validarMovimentacao} from "../validator/MovimentacaoValidator";
 
 export class ContaCorrenteService {
     private contaCorrenteDao = new ContaCorrenteDao();
@@ -31,6 +32,7 @@ export class ContaCorrenteService {
     }
 
     async registrarMovimentacao(movimentacao: IMovimentacao): Promise<IMovimentacao> {
+        validarMovimentacao(movimentacao);
         const tipoId: TipoTransacaoId = movimentacao.tipo;
         const valor = movimentacao.valor;
         const usuario = movimentacao.usuario;

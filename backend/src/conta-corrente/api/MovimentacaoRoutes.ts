@@ -27,7 +27,7 @@ router.post('/', (req : Request<{}, {}, IMovimentacao>, res: Response<IMovimenta
         })
 })
 
-router.post('/contaCorrente', (req: Request<{}, {}, {}>, res: Response<IContaCorrente>, next: NextFunction) => {
+router.get('/contaCorrente', (req: Request<{}, {}, {}>, res: Response<IContaCorrente>, next: NextFunction) => {
     contaCorrenteService.obterContaCorrente(req.user!!)
         .then(resultado=>res.status(200).json(resultado))
         .catch((erro) => {

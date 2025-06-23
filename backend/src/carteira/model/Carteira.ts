@@ -19,7 +19,7 @@ const CarteiraSchema = new Schema<ICarteira>({
     quantidade: {
         type: Number,
         required: true,
-        min: 1
+        min: 0
     },
     precoCompra: {
         type: Number,

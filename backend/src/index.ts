@@ -6,6 +6,7 @@ import ordemCompraRouter from "./ordem-compra/api/ordem-compra.routes";
 import ordemVendaRouter from "./ordem-venda/api/ordem-venda.routes";
 import carteiraRouter from "./carteira/api/carteira.routes"
 import horaNegociacaoRouter from "./hora-negociacao/api/hora-negociacao.routes";
+import movimentacaoRouter from "./conta-corrente/api/MovimentacaoRoutes";
 
 const app = express();
 const PORT = 3000;
@@ -29,6 +30,8 @@ app.use('/ordemVenda', ordemVendaRouter)
 app.use('/carteira', carteiraRouter)
 
 app.use('/negociacao', horaNegociacaoRouter)
+
+app.use('/movimentacao', movimentacaoRouter)
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

@@ -73,9 +73,8 @@ export class CarteiraService {
         carteira.quantidadeVendida = (carteira.quantidadeVendida ?? 0) + transacao.quantidade
         carteira.quantidade = carteira.quantidade - transacao.quantidade
 
-
+        await this.carteiraDao.salvar(carteira)
     }
-
 
     private calcularPrecoMedioCompra(carteira: ICarteira, transacao: TransacaoAcao): number {
         if(carteira.quantidade === 0) {
@@ -91,7 +90,7 @@ export class CarteiraService {
             return transacao.valorUnitario
         }
 
-        if(carteira.precoVenda) {
+        if(!carteira.precoVenda) {
             throw new Error('Existem ações vendidas por preço null')
         }
 

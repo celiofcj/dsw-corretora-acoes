@@ -1,4 +1,4 @@
-import OrdemVenda, {IOrdemVenda} from "../interface/ordem-venda";
+import OrdemVenda, {IOrdemVenda} from "../model/ordem-venda";
 import {Types} from "mongoose";
 
 export class OrdemVendaDao {

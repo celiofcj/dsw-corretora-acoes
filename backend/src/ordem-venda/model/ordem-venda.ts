@@ -1,13 +1,15 @@
 import mongoose, {Schema, Document, Types} from "mongoose";
+import {PedidoOrdemVenda} from "../interface/ordem-venda.interface";
+
 
 export interface IOrdemVenda extends Document {
     dataHora: Date;
     ticker: string;
     quantidade: number;
     executada: boolean;
-    precoExecucao: number;
+    precoExecucao?: number;
     precoReferenciaVenda: number;
-    dataHoraExecucao: Date;
+    dataHoraExecucao?: Date;
     usuario: Types.ObjectId;
 }
 
@@ -71,6 +73,19 @@ OrdemVendaSchema.set('toJSON', {
 });
 
 const OrdemVenda = mongoose.model<IOrdemVenda>('OrdemVenda', OrdemVendaSchema);
+
+export function fromPedidoVenda (pedido: PedidoOrdemVenda, userId: Types.ObjectId): IOrdemVenda {
+    return new OrdemVenda({
+        ticker: pedido.ticker,
+        quantidade: pedido.quantidade,
+        executada: pedido.executada,
+        dataHora: pedido.dataHora,
+        precoReferenciaVenda: pedido.preco,
+        dataHoraExecucao: pedido.executada ? pedido.dataHora : null,
+        precoExecucao: pedido.executada ? pedido.preco : null,
+        usuario: userId
+    })
+}
 
 export default OrdemVenda;
 

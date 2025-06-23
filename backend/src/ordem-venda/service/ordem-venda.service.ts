@@ -1,11 +1,14 @@
-import {IOrdemVenda, IOrdemVendaExecucao} from "../interface/ordem-venda";
+import {fromPedidoVenda, IOrdemVenda} from "../model/ordem-venda";
 import {OrdemVendaDao} from "../dao/ordem-venda.dao";
 import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
 import {UserData} from "../../security/UserData";
 import {NotFoundError, TransacaoError} from "../../error/erros";
 import {CarteiraService} from "../../carteira/service/CarteiraService";
 import {TransacaoAcao} from "../../carteira/carteira.interface";
-import {validarOrdemVenda} from "../validator/ordem-venda.validator";
+import {validarPedidoOrdemVenda} from "../validator/ordem-venda.validator";
+import {PedidoExecucaoOrdemVenda, PedidoOrdemVenda} from "../interface/ordem-venda.interface";
+import {validarPedidoExecucao} from "../../ordem-compra/validator/ordem-compra.validator";
+
 
 
 export class OrdemVendaService {
@@ -13,16 +16,18 @@ export class OrdemVendaService {
     private usuarioLogadoService = new UsuarioLogadoService();
     private carteiraService = new CarteiraService();
 
-    async salvarOrdemVenda(ordemVenda: IOrdemVenda, userData: UserData): Promise<IOrdemVenda> {
-        validarOrdemVenda(ordemVenda)
-        await this.usuarioLogadoService.obterUsuarioLogado(userData)
+    async salvarOrdemVenda(pedido: PedidoOrdemVenda, userData: UserData): Promise<IOrdemVenda> {
+        const usuario = await this.usuarioLogadoService.obterUsuarioLogado(userData)
             .then(usuario => {
-                ordemVenda.usuario = usuario._id
                 return usuario
             })
 
-        if(ordemVenda.executada){
-            await this.executarVenda(ordemVenda);
+        validarPedidoOrdemVenda(pedido);
+
+        const ordemVenda = fromPedidoVenda(pedido, usuario._id);
+
+        if(pedido.executada) {
+            await this.executarVenda(ordemVenda)
         }
 
         return await this.ordemVendaDao.salvarOrdemVenda(ordemVenda);
@@ -35,35 +40,43 @@ export class OrdemVendaService {
             })
     }
 
-    async executarBaseadoEmCompra(idOrdemVenda: string, dadosVenda: IOrdemVendaExecucao, userData: UserData): Promise<IOrdemVenda> {
-        return this.usuarioLogadoService.obterUsuarioLogado(userData)
-            .then(async usuario => {
-                const ordemVenda = await this.ordemVendaDao.obterUma(idOrdemVenda, usuario._id)
-                if (!ordemVenda) {
-                    throw new NotFoundError(`Ordem de compra com ID ${idOrdemVenda} não encontrada.`);
+    async executarOrdemVenda(id: string, dadosVenda: PedidoExecucaoOrdemVenda, userData: UserData): Promise<IOrdemVenda> {
+        const usuario = await this.usuarioLogadoService.obterUsuarioLogado(userData)
+            .then(usuario => {
+                return usuario
+            })
+
+        validarPedidoExecucao(dadosVenda)
+
+        const ordemVenda = await this.ordemVendaDao.obterUma(id, usuario._id)
+            .then(ordemVendaRegistrada => {
+                if(!ordemVendaRegistrada) {
+                    throw new NotFoundError(`Não há ordem de compra registrada com o id ${id}`)
                 }
 
-                if(ordemVenda.executada) {
-                    throw new TransacaoError(`A negociação com id ${idOrdemVenda} já foi executada`)
+                if(ordemVendaRegistrada.executada) {
+                    throw new TransacaoError(`A negociação com id ${id} já foi executada`)
                 }
 
-                ordemVenda.executada = true
-                ordemVenda.precoExecucao = dadosVenda.precoExecucao
-                ordemVenda.dataHoraExecucao = dadosVenda.datahora
+                ordemVendaRegistrada.executada = true
+                ordemVendaRegistrada.precoExecucao = dadosVenda.preco
+                ordemVendaRegistrada.dataHoraExecucao = dadosVenda.dataHora
 
-                await this.executarVenda(ordemVenda);
+                return ordemVendaRegistrada
+            })
 
-                return this.ordemVendaDao.salvarOrdemVenda(ordemVenda);
-            });
+        await this.executarVenda(ordemVenda)
+
+        return await this.ordemVendaDao.salvarOrdemVenda(ordemVenda)
     }
 
     private async executarVenda(ordemVenda: IOrdemVenda): Promise<void> {
         const transacaoAcao: TransacaoAcao = {
             ticker: ordemVenda.ticker,
-            valorUnitario: ordemVenda.precoExecucao,
+            valorUnitario: ordemVenda.precoExecucao!!,
             quantidade: ordemVenda.quantidade,
             usuario: ordemVenda.usuario,
-            dataHora: ordemVenda.dataHora
+            dataHora: ordemVenda.dataHoraExecucao!!
         }
 
         await this.carteiraService.venderAcoes(transacaoAcao);

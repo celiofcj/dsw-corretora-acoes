@@ -1,9 +1,11 @@
 import {NextFunction, Request, Response, Router} from "express";
 import {autenticarToken} from "../../security/auth.middleware";
 import {OrdemVendaService} from "../service/ordem-venda.service";
-import {IOrdemVenda, IOrdemVendaExecucao} from "../interface/ordem-venda";
+import {IOrdemVenda} from "../model/ordem-venda";
 import {ErrorMessage} from "../../error/ErrorMessage";
 import {errorHandler} from "../../error/error.middleware";
+import {ErroValidacao} from "../../error/erros";
+import {PedidoExecucaoOrdemVenda, PedidoOrdemVenda} from "../interface/ordem-venda.interface";
 
 const router = Router();
 
@@ -17,21 +19,28 @@ router.get('/', (req: Request, res: Response<Array<IOrdemVenda>>, next: NextFunc
         .catch(error => next(error))
 });
 
-router.post('/', (req: Request<{}, {}, IOrdemVenda>, res: Response<IOrdemVenda | ErrorMessage | null>, next: NextFunction) => {
+router.post('/', (req: Request<{}, {}, PedidoOrdemVenda>, res: Response<IOrdemVenda | ErrorMessage | null>, next: NextFunction) => {
+     try {
         ordemVendaService.salvarOrdemVenda(req.body, req.user!!)
             .then(salvo => res.status(201).json(salvo))
              .catch((error) => {
-                 next(error)
+                 console.error('Erro ao salvar ordem de venda:', error);
+                 res.status(500).json({ errors: ['Erro ao salvar ordem.'] });
              });
+     } catch (e) {
+         if (e instanceof ErroValidacao)
+             res.status(400).json({ errors: [e.message] });
+     }
 });
 
-router.post("/:id/executar", (req: Request<{ id: string }, {}, IOrdemVendaExecucao>, res: Response<IOrdemVenda | ErrorMessage>, next: NextFunction)  => {
+router.post("/:id/executar", (req: Request<{ id: string }, {}, PedidoExecucaoOrdemVenda>, res: Response<IOrdemVenda | ErrorMessage>, next: NextFunction)  => {
 
-    ordemVendaService.executarBaseadoEmCompra(req.params.id, req.body, req.user!!)
+    ordemVendaService.executarOrdemVenda(req.params.id, req.body, req.user!!)
         .then(ordemExecutada => res.status(201).json(ordemExecutada))
-        .catch((error) => {
-            next(error)
-        });
+        .catch(err => {
+             console.error("Erro ao executar ordem de venda:", err);
+             res.status(500).json({ errors: err.message });
+         });
 });
 
 router.use(errorHandler)

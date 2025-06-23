@@ -5,4 +5,5 @@ export interface TransacaoAcao {
     valorUnitario: number
     quantidade: number
     usuario: Types.ObjectId
+    dataHora: Date
 }

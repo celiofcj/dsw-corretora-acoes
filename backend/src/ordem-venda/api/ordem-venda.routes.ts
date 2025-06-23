@@ -35,21 +35,8 @@ router.post('/', (req: Request<{}, {}, IOrdemVenda>, res: Response<IOrdemVenda |
 });
 
 router.post("/:id/executar", (req: Request<{ id: string }, {}, IOrdemVendaExecucao>, res: Response<IOrdemVenda | ErrorMessage>, next: NextFunction)  => {
-    const idOrdemCompra = req.params.id;
-    const { precoExecucao, quantidade} = req.body;
 
-    if (precoExecucao == null || precoExecucao <= 0) {
-        res.status(400).json({
-            errors: ["O corpo da requisição deve conter um precoExecucao maior que zero."],
-        });
-    }
-    if (quantidade != null && quantidade <= 0) {
-        res.status(400).json({
-            errors: ["O corpo da requisição deve conter uma quantidade maior que zero."],
-        });
-    }
-
-    ordemVendaService.executarBaseadoEmCompra(idOrdemCompra, { precoExecucao, quantidade}, req.user!!)
+    ordemVendaService.executarBaseadoEmCompra(req.params.id, req.body, req.user!!)
         .then(ordemExecutada => res.status(201).json(ordemExecutada))
         .catch(err => {
              console.error("Erro ao executar ordem de venda:", err);

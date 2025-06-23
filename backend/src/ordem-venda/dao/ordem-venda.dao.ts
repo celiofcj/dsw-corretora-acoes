@@ -1,6 +1,5 @@
-import OrdemVenda, { IOrdemVenda } from "../interface/ordem-venda";
+import OrdemVenda, {IOrdemVenda} from "../interface/ordem-venda";
 import {Types} from "mongoose";
-import usuario from "../../acesso/model/Usuario";
 
 export class OrdemVendaDao {
     async salvarOrdemVenda(dados: IOrdemVenda): Promise<IOrdemVenda> {
@@ -10,5 +9,13 @@ export class OrdemVendaDao {
 
     async obterTodas(userId: Types.ObjectId): Promise<Array<IOrdemVenda>> {
         return OrdemVenda.find({usuario: userId});
+    }
+
+    async obterUma(id: string, userId:Types.ObjectId) : Promise<IOrdemVenda | null> {
+        if (!Types.ObjectId.isValid(id)) {
+            return null;
+        }
+
+        return OrdemVenda.findOne({_id: id, usuario: userId})
     }
 }

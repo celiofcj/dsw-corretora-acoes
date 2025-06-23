@@ -1,9 +1,32 @@
 import mongoose, {Schema, Document, Types} from "mongoose";
 
+export const TipoMovimentacaoInfo = {
+    DEPOSITO: {
+        id: 'DEPOSITO',
+        operacao: 'entrada'
+    },
+    RETIRADA: {
+        id: 'RETIRADA',
+        operacao: 'saída'
+    },
+    COMPRA_ACOES: {
+        id: 'COMPRA_ACOES',
+        operacao: 'saída'
+    },
+    VENDA_ACOES: {
+        id: 'VENDA_ACOES',
+        operacao: 'entrada'
+    }
+} as const;
+
+export type TipoMovimentacao = keyof typeof TipoMovimentacaoInfo;
+export type TipoOperacao = typeof TipoMovimentacaoInfo[TipoMovimentacao]['operacao'];
+export type TipoTransacaoId = typeof TipoMovimentacaoInfo[TipoMovimentacao]['id'];
+
 export interface IMovimentacao extends Document {
     valor: number;
     descricao: string;
-    tipo: string;
+    tipo: TipoTransacaoId;
     dataHora: Date;
     usuario: Types.ObjectId;
 }
@@ -22,7 +45,8 @@ const MovimentacaoSchema = new Schema<IMovimentacao>({
     tipo: {
         type: String,
         required: true,
-        uppercase: true
+        uppercase: true,
+        enum: Object.values(TipoMovimentacaoInfo).map(info => info.id)
     },
     dataHora: {
         type: Date,

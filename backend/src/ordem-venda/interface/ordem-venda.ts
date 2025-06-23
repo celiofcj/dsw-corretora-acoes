@@ -4,7 +4,6 @@ export interface IOrdemVenda extends Document {
     dataHora: Date;
     ticker: string;
     quantidade: number;
-    modo: string;
     executada: boolean;
     precoExecucao: number;
     precoReferenciaVenda: number;
@@ -14,7 +13,7 @@ export interface IOrdemVenda extends Document {
 
 export interface IOrdemVendaExecucao {
     precoExecucao: number;
-    quantidade?: number;
+    datahora: Date;
 }
 
 const OrdemVendaSchema = new Schema<IOrdemVenda>({
@@ -32,12 +31,6 @@ const OrdemVendaSchema = new Schema<IOrdemVenda>({
         type: Number,
         required: true,
         min: 1
-    },
-    modo: {
-        type: String,
-        required: true,
-        trim: true,
-        uppercase: true
     },
     executada: {
         type: Boolean,

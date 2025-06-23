@@ -1,43 +1,43 @@
 import {UserData} from "../../security/UserData";
 import {UsuarioLogadoService} from "../../acesso/service/UsuarioLogadoService";
-import {IMovimentacao} from "../model/Movimentacao";
+import {IMovimentacao, TipoMovimentacaoInfo, TipoTransacaoId} from "../model/Movimentacao";
 import {ContaCorrenteDao} from "../dao/ContaCorrenteDao";
-
-
-interface Temp {
-    valor: number,
-    descricao: string,
-    tipo: string
-}
+import {ErroValidacao} from "../../error/erros";
 
 export class ContaCorrenteService {
     private contaCorrenteDao = new ContaCorrenteDao();
     private usuarioLogadoService = new UsuarioLogadoService()
 
     async registrarMovimentacao(movimentacao: IMovimentacao): Promise<IMovimentacao> {
-        const tipo = movimentacao.tipo.toLowerCase().trim();
+        const tipoId: TipoTransacaoId = movimentacao.tipo;
         const valor = movimentacao.valor;
         const usuario = movimentacao.usuario;
 
-        const conta = await this.contaCorrenteDao.obterConta(usuario);
-        if (!conta) {
-            throw new Error("Conta corrente não encontrada.");
+        const info = TipoMovimentacaoInfo[tipoId];
+
+        if (!info) {
+            throw new ErroValidacao([`Tipo de movimentação desconhecido: ${tipoId}`]);
         }
 
-        if (["compra de ações", "retirada"].includes(tipo)) {
-            if (conta.saldo < valor) {
-                throw new Error("Saldo insuficiente.");
-            }
-            conta.saldo -= valor;
-        } else if (["depósito", "venda de ações"].includes(tipo)) {
-            conta.saldo += valor;
-        } else {
-            throw new Error("Tipo de movimentação inválido.");
+        const conta = await this.contaCorrenteDao.obterConta(usuario);
+        if (!conta) {
+            throw new ErroValidacao(['Conta corrente não encontrada.']);
+        }
+
+        switch (info.operacao) {
+            case 'saída':
+                if (conta.saldo < valor) {
+                    throw new Error("Saldo insuficiente.");
+                }
+                conta.saldo -= valor;
+                break;
+
+            case 'entrada':
+                conta.saldo += valor;
+                break;
         }
 
         await this.contaCorrenteDao.salvarConta(conta);
-
-        movimentacao.dataHora = new Date();
 
         return this.contaCorrenteDao.salvarMovimentacao(movimentacao);
     }

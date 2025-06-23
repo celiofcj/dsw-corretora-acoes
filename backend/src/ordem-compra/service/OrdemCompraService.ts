@@ -75,7 +75,8 @@ export class OrdemCompraService{
             ticker: ordemCompra.ticker,
             valorUnitario: ordemCompra.precoExecucao!!,
             quantidade: ordemCompra.quantidade,
-            usuario: ordemCompra.usuario
+            usuario: ordemCompra.usuario,
+            dataHora: ordemCompra.dataHoraExecucao!!
         }
 
         await this.carteiraService.comprarAcoes(transacaoAcao)

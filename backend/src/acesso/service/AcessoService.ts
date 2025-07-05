@@ -156,6 +156,7 @@ export class AcessoService {
         return this.senhaService.atualizarSenha({senha: body.senha}, usuario.senha)
             .then(senhaAtualizada => {
                 usuario.codigoRecuperacaoSenha = null
+                usuario.falhasLogin = 0
                 usuario.senha = senhaAtualizada
                 this.acessoDao.salvar(usuario)
             })

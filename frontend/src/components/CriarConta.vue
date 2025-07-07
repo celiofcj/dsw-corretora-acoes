@@ -4,19 +4,22 @@ import { useRouter } from 'vue-router';
 
 const email = ref('');
 const senha = ref('');
+const confirmarSenha = ref('');
 const errorMessage = ref('');
 const router = useRouter();
 
-interface Token {
-  token: string;
-}
-
-const url = 'http://localhost:3000/acesso'
-
-const login = async () => {
+const registrar = async () => {
   errorMessage.value = '';
+
+  const url = 'http://localhost:3000/acesso'
+
+  if (senha.value !== confirmarSenha.value) {
+    errorMessage.value = 'As senhas não coincidem.';
+    return;
+  }
+
   try {
-    const response = await fetch(url + '/login', {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,37 +30,38 @@ const login = async () => {
       }),
     });
 
-    if (response.ok) {
-      const data: Token = await response.json();
-      localStorage.setItem('authToken', data.token);
-      router.push('/carteira');
+    if (response.status === 201) {
+      router.push('/login');
     } else {
       const errorData = await response.json();
-      errorMessage.value = errorData.message || 'E-mail ou senha inválidos.';
+      errorMessage.value = errorData.message || 'Ocorreu um erro ao criar a conta.';
     }
   } catch (error) {
-    errorMessage.value = 'Não foi possível conectar ao servidor. Tente novamente mais tarde.';
+    errorMessage.value = 'Não foi possível conectar ao servidor.';
   }
 };
 </script>
 
 <template>
   <div class="login-container">
-    <form @submit.prevent="login" class="login-form">
-      <h1>Login</h1>
+    <form @submit.prevent="registrar" class="login-form">
+      <h1>Criar Conta</h1>
       <div class="form-group">
         <label for="email">Email</label>
-        <input id="email" type="email" v-model="email" required autocomplete="email"/>
+        <input id="email" type="email" v-model="email" required autocomplete="email" />
       </div>
       <div class="form-group">
         <label for="password">Senha</label>
-        <input id="password" type="password" v-model="senha" required autocomplete="current-password"/>
+        <input id="password" type="password" v-model="senha" required autocomplete="new-password" />
       </div>
-      <button type="submit">Entrar</button>
+      <div class="form-group">
+        <label for="confirm-password">Confirmar Senha</label>
+        <input id="confirm-password" type="password" v-model="confirmarSenha" required autocomplete="new-password" />
+      </div>
+      <button type="submit">Cadastrar</button>
       <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       <div class="links">
-        <router-link to="/recuperar-senha">Esqueceu a senha?</router-link>
-        <router-link to="/criar-conta">Criar uma conta</router-link>
+        <router-link to="/login">Já tem uma conta? Faça login</router-link>
       </div>
     </form>
   </div>
@@ -135,7 +139,7 @@ button:hover {
 
 .links {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   margin-top: 1rem;
 }
 

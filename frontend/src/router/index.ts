@@ -3,6 +3,8 @@ import Carteira from "@/components/Carteira.vue";
 import Mercado from "@/components/Mercado.vue";
 import ContaCorrente from "@/components/ContaCorrente.vue";
 import Login from "@/components/Login.vue";
+import CriarConta from "@/components/CriarConta.vue";
+import RecuperarSenha from "@/components/RecuperarSenha.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,6 +18,16 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: Login,
+    },
+    {
+      path: '/criar-conta',
+      name: 'criar-conta',
+      component: CriarConta,
+    },
+    {
+      path: '/recuperar-senha',
+      name: 'recuperar-senha',
+      component: RecuperarSenha
     },
     {
       path: '/carteira',

@@ -6,7 +6,9 @@ import GerenciadorHora from "@/components/GerenciadorHora.vue";
 
 const router = useRoute();
 
-const mostrarComponentes = computed(() => router.path !== '/login');
+const rotasSemHeader = ['/login', '/criar-conta', '/recuperar-senha']
+
+const mostrarComponentes = computed(() => !rotasSemHeader.includes(router.path));
 
 </script>
 

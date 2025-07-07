@@ -1,15 +1,21 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Carteira from "@/components/Carteira.vue";
 import Mercado from "@/components/Mercado.vue";
-import Conta from "@/components/Conta.vue";
+import ContaCorrente from "@/components/ContaCorrente.vue";
+import Login from "@/components/Login.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Carteira,
+      name: 'login',
+      component: Login,
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: Login,
     },
     {
       path: '/carteira',
@@ -24,7 +30,7 @@ const router = createRouter({
     {
       path: '/conta',
       name: 'conta',
-      component: Conta
+      component: ContaCorrente
     }
   ],
 })

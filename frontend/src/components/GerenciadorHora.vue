@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import {computed, ref} from "vue";
-  const hora = ref(0)
+  import { computed, ref } from "vue";
+  import emitter from "@/processing/eventBus.ts";
+
+  const hora = ref(12)
   const minuto = ref(0)
 
-
   function avancarMinutos(minutos: number) {
+    console.log('Enviando notificação')
+    emitter.emit('time-process:start', minuto.value + minutos)
+
     const totalMinutos = hora.value * 60 + minuto.value + minutos
 
-    hora.value = Math.floor((totalMinutos % 1440) / 60) // 1440 = 24 * 60
+    hora.value = Math.floor((totalMinutos % 1440) / 60)
     minuto.value = totalMinutos % 60
   }
 
@@ -58,7 +62,7 @@ import {computed, ref} from "vue";
 }
 
 .botao-tempo:hover {
-  background-color: darkslategrey;
-  border: darkslategrey;
+  background-color: hsla(160, 100%, 37%, 1);
+  border: hsla(160, 100%, 37%, 1);
 }
 </style>

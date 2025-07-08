@@ -21,7 +21,6 @@ nav {
 }
 
 .item {
-  border-radius: 0.5em;
   text-align: center;
   color: hsla(160, 100%, 37%, 1);
   text-decoration: none;
@@ -34,6 +33,16 @@ nav {
 
 .item:hover {
   background-color: lightgray;
+}
+
+nav .item:first-child {
+  border-bottom-left-radius: 0.5em;
+  border-top-left-radius: 0.5em;
+}
+
+nav .item:last-child {
+  border-bottom-right-radius: 0.5em;
+  border-top-right-radius: 0.5em;
 }
 
 </style>

@@ -1,7 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Carteira from "@/components/Carteira.vue";
 import Mercado from "@/components/Mercado.vue";
-import ContaCorrente from "@/components/ContaCorrente.vue";
+import ContaCorrente from "@/components/movimentacao/ContaCorrente.vue";
 import Login from "@/components/Login.vue";
 import CriarConta from "@/components/CriarConta.vue";
 import RecuperarSenha from "@/components/RecuperarSenha.vue";

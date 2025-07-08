@@ -1,81 +1,63 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref} from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import emitter from "@/processing/eventBus.ts";
 import {
-  type IContaCorrente,
-  type IMovimentacao,
   type TipoMovimentacao,
   TipoMovimentacaoInfo,
   type TipoTransacaoId
 } from '@/types/movimentacaoTypes.ts';
-import {useRouter} from "vue-router";
+import {useMovimentacao} from "@/composable/useMovimentacao.ts";
+import BotoesTransferencia from "@/components/movimentacao/BotoesTransferencia.vue";
+import ModalTransferencia from "@/components/movimentacao/ModalTransferencia.vue";
 
-const router = useRouter();
-const contaCorrente = ref<IContaCorrente | null>(null);
-const movimentacoes = ref<IMovimentacao[]>([]);
-const erro = ref<string | null>(null);
+const {
+  contaCorrente,
+  movimentacoes,
+  erro,
+  isSubmitting,
+  getContaCorrente,
+  getMovimentacoes,
+  registrarMovimentacao,
+} = useMovimentacao();
 
-const url = 'http://localhost:3000/movimentacao'
-const token = localStorage.getItem('authToken');
+const showModal = ref(false);
+const modalType = ref<'DEPOSITO' | 'RETIRADA' | null>(null);
+const apiError = ref<string | null>(null);
 
-const fetchContaCorrente = async () => {
-  contaCorrente.value = await fetch(url + '/contaCorrente',
-      {
-        headers: {
-          Authorization: 'Bearer ' + token
-        }
-      })
-      .then(response => {
-        if (response.status === 401) {
-          router.push('/login')
-        }
-
-        if (!response.ok) {
-          throw new Error('Erro ao carregar o saldo da conta.')
-        }
-
-        return response.json()
-      })
-      .catch(error => {
-        erro.value = 'Erro ao carregar o saldo da conta.';
-        console.error(error);
-      });
+const openModal = (type: 'DEPOSITO' | 'RETIRADA') => {
+  modalType.value = type;
+  apiError.value = null;
+  showModal.value = true;
 };
 
-const fetchMovimentacoes = async () => {
+const closeModal = () => {
+  showModal.value = false;
+  modalType.value = null;
+};
 
-    movimentacoes.value = await fetch(url + '/',
-        {
-          headers: {
-            Authorization: 'Bearer ' + token
-          }
-        })
-        .then(response => {
-          if (response.status === 401) {
-            router.push('/login')
-          }
-
-          if (!response.ok) {
-            throw new Error('Erro ao carregar as movimentações.')
-          }
-
-          return response.json()
-        })
-        .catch(error => {
-          console.error(error)
-        })
+const registrarTransacao = async (payload: { descricao: string; valor: number; tipo: 'DEPOSITO' | 'RETIRADA' }) => {
+  apiError.value = null;
+  try {
+    await registrarMovimentacao(payload);
+    await getContaCorrente();
+    await getMovimentacoes();
+    closeModal();
+  } catch (e: any) {
+    apiError.value = e.message;
+    console.error(e);
+  }
 };
 
 const onProcessComplete = () => {
   console.log(`[ListenerComponent] Evento 'process:complete' recebido!`);
-  fetchContaCorrente();
-  fetchMovimentacoes();
+  getContaCorrente();
+  getMovimentacoes();
 };
 
 onMounted(() => {
   console.log('On mount');
-  fetchContaCorrente();
-  fetchMovimentacoes();
+  getContaCorrente();
+  getMovimentacoes();
   emitter.on('time-process:complete', onProcessComplete);
 });
 
@@ -105,7 +87,7 @@ const getTransactionTypeClass = (tipo: TipoTransacaoId) => {
 
   if (movimentacaoKey) {
     const operacao = TipoMovimentacaoInfo[movimentacaoKey].operacao;
-    return operacao === 'entrada' ? 'text-success' : 'text-danger';
+    return operacao === 'entrada' ? 'texto-sucesso' : 'texto-perigo';
   }
   return '';
 };
@@ -117,23 +99,27 @@ const getTransactionTypeText = (tipo: TipoTransacaoId) => {
 </script>
 
 <template>
-  <div class="account-container">
-    <div v-if="erro" class="error-message">{{ erro }}</div>
 
-    <div v-if="contaCorrente" class="balance-section">
+  <div class="container-botoes">
+    <BotoesTransferencia @open-modal="openModal"/>
+  </div>
+  <div class="container-conta">
+    <div v-if="erro" class="mensagem-erro">{{ erro }}</div>
+
+    <div v-if="contaCorrente" class="secao-saldo">
       <h2>Saldo da Conta Corrente</h2>
-      <p class="balance-value">{{ formatCurrency(contaCorrente.saldo) }}</p>
+      <p class="valor-saldo">{{ formatCurrency(contaCorrente.saldo) }}</p>
     </div>
 
-    <div class="transactions-section">
+    <div class="secao-movimentacoes">
       <h2>Últimas Movimentações</h2>
-      <table v-if="movimentacoes.length > 0" class="transactions-table">
+      <table v-if="movimentacoes.length > 0" class="tabela-movimentacoes">
         <thead>
         <tr>
           <th>Descrição</th>
           <th>Data/Hora</th>
           <th>Tipo</th>
-          <th class="text-right">Valor</th>
+          <th class="texto-direita">Valor</th>
         </tr>
         </thead>
         <tbody>
@@ -141,7 +127,7 @@ const getTransactionTypeText = (tipo: TipoTransacaoId) => {
           <td>{{ mov.descricao }}</td>
           <td>{{ formatDate(mov.dataHora) }}</td>
           <td>{{ getTransactionTypeText(mov.tipo) }}</td>
-          <td :class="getTransactionTypeClass(mov.tipo)" class="text-right">
+          <td :class="[getTransactionTypeClass(mov.tipo), 'texto-direita']">
             {{ formatCurrency(mov.valor) }}
           </td>
         </tr>
@@ -149,79 +135,94 @@ const getTransactionTypeText = (tipo: TipoTransacaoId) => {
       </table>
       <p v-else>Nenhuma movimentação encontrada.</p>
     </div>
+
+    <ModalTransferencia
+        :show="showModal"
+        :type="modalType"
+        :is-submitting="isSubmitting"
+        :api-error="apiError"
+        @close="closeModal"
+        @submit="registrarTransacao"
+    />
   </div>
 </template>
 
 <style scoped>
-.account-container {
+.container-botoes {
+  padding: 2em 2em 0;
+  display: flex;
+  justify-content: center;
+}
+
+.container-conta {
   font-family: Arial, sans-serif;
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.balance-section {
+.secao-saldo {
   border-radius: 8px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   text-align: left;
   padding: 1em 1em 0 0;
 }
 
-.balance-section h2 {
+.secao-saldo h2 {
   margin-top: 0;
   color: #333;
   font-size: 1.25em;
 }
 
-.balance-value {
+.valor-saldo {
   margin-top: 0;
   font-size: 1.5em;
   font-weight: bold;
   color: hsla(160, 100%, 37%, 1);
 }
 
-.transactions-section h2 {
+.secao-movimentacoes h2 {
   color: #333;
   border-bottom: 2px solid #eee;
   padding-bottom: 10px;
   margin-bottom: 20px;
 }
 
-.transactions-table {
+.tabela-movimentacoes {
   width: 100%;
   border-collapse: collapse;
 }
 
-.transactions-table th, .transactions-table td {
+.tabela-movimentacoes th, .tabela-movimentacoes td {
   padding: 12px 15px;
   border-bottom: 1px solid #ddd;
   text-align: left;
 }
 
-.transactions-table th {
+.tabela-movimentacoes th {
   background-color: #f7f7f7;
   font-weight: bold;
 }
 
-.transactions-table tbody tr:hover {
+.tabela-movimentacoes tbody tr:hover {
   background-color: #f1f1f1;
 }
 
-.text-right {
+.texto-direita {
   text-align: right;
 }
 
-.text-success {
-  color: #28a745;
+.texto-sucesso {
+  color: hsla(160, 100%, 37%, 1);
   font-weight: bold;
 }
 
-.text-danger {
+.texto-perigo {
   color: #dc3545;
   font-weight: bold;
 }
 
-.error-message {
+.mensagem-erro {
   color: #721c24;
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;

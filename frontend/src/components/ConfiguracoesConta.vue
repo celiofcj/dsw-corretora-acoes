@@ -74,10 +74,19 @@ const trocarSenha = async () => {
     isSubmitting.value = false;
   }
 };
+
+const sair = () => {
+  localStorage.clear()
+  router.push('/login')
+}
+
 </script>
 
 <template>
   <div class="configuracoesConta-container">
+    <div>
+      <button class="btn-vermelho" @click="sair()">Sair</button>
+    </div>
     <form class="trocar-senha-form" @submit.prevent="trocarSenha" novalidate>
       <h3>Trocar de senha</h3>
       <div class="form-group">
@@ -119,6 +128,11 @@ const trocarSenha = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+}
+
+.configuracoesConta-container:first-child {
+  padding-top: 2em;
 }
 
 .trocar-senha-form {
@@ -182,6 +196,14 @@ button:hover {
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+.btn-vermelho {
+  background-color: #dc3545;
+}
+
+.btn-vermelho:hover {
+  background-color: #c82333;
 }
 
 .field-error-message {

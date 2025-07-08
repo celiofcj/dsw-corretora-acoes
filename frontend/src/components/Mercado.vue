@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import ModalAdicionarAcao from './ModalAdicionarAcao.vue'; // Importe o novo componente
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
+import ModalAdicionarAcao from './ModalAdicionarAcao.vue';
+import emitter, {type HoraOperacao} from "@/processing/eventBus.ts"; // Importe o novo componente
 
 // --- DEFINIÇÃO DE TIPOS ---
 interface Acao {
@@ -10,8 +11,8 @@ interface Acao {
 }
 
 // --- ESTADO REATIVO (REFS) ---
-const hora = ref(14);
-const minuto = ref(0);
+let hora = 12;
+let minuto = 0;
 const acoesVisiveis = ref<Acao[]>([]);
 let todasAsAcoes: Acao[] = [];
 const tickersAtualizados = ref(new Set<string>());
@@ -25,27 +26,13 @@ watch(acoesVisiveis, (newAcoes) => {
   localStorage.setItem('acoesVisiveis', JSON.stringify(tickers));
 }, { deep: true });
 
-
-// --- LÓGICA DO RELÓGIO ---
-function avancarMinutos(minutos: number) {
-  const totalMinutosSimulacao = minuto.value + minutos;
-  minuto.value = totalMinutosSimulacao % 60;
-  fetchPrecosAtuais();
-}
-
-const horaFormatada = computed(() => {
-  const h = hora.value.toString().padStart(2, '0');
-  const m = minuto.value.toString().padStart(2, '0');
-  return `${h}:${m}`;
-});
-
 // --- LÓGICA DE DADOS (API) ---
 const TICKERS_URL = 'https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/tickers.json';
 const PRECO_URL_BASE = 'https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/';
 
 async function fetchPrecosAtuais() {
   try {
-    const response = await fetch(`${PRECO_URL_BASE}${minuto.value}.json`);
+    const response = await fetch(`${PRECO_URL_BASE}${minuto}.json`);
     const precosAtuais: { ticker: string, preco: number }[] = await response.json();
     tickersAtualizados.value.clear();
     const mapaPrecos = new Map(precosAtuais.map(p => [p.ticker, p.preco]));
@@ -83,9 +70,20 @@ function removerAcao(tickerParaRemover: string) {
   );
 }
 
+const onProcessComplete = (horaOperacao: HoraOperacao) => {
+  console.log(`[Listener Mercado] Evento 'process:complete' recebido!`);
+  console.log(horaOperacao);
+  console.log(`[Listener Mercado] -------------------------------------`);
+  hora = horaOperacao.hora
+  minuto = horaOperacao.minuto
+  fetchPrecosAtuais()
+};
+
 // --- CICLO DE VIDA DO COMPONENTE ---
 onMounted(async () => {
   try {
+    emitter.on('time-process:complete', onProcessComplete);
+
     const response = await fetch(TICKERS_URL);
     todasAsAcoes = await response.json();
 
@@ -104,6 +102,12 @@ onMounted(async () => {
     console.error("Erro ao inicializar o componente:", error);
   }
 });
+
+onUnmounted(() => {
+  console.log('On unmount');
+  emitter.off('time-process:complete', onProcessComplete);
+});
+
 </script>
 
 <template>
@@ -115,14 +119,6 @@ onMounted(async () => {
   />
 
   <div class="container-mercado">
-    <div class="wrapper-relogio">
-      <span class="hora">{{ horaFormatada }}</span>
-      <div class="botoes">
-        <button class="botao-tempo" @click="avancarMinutos(1)">+1 min</button>
-        <button class="botao-tempo" @click="avancarMinutos(5)">+5 min</button>
-      </div>
-    </div>
-
     <div class="acoes-header">
       <h2>Ações no Mercado</h2>
       <button @click="mostrarModal = true" class="botao-adicionar">Adicionar Ação</button>
@@ -174,43 +170,6 @@ onMounted(async () => {
 <style scoped>
 .container-mercado {
   padding: 20px;
-}
-
-.wrapper-relogio {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 1.5em;
-  max-width: 400px;
-  margin: 0 auto 2em auto;
-}
-
-.hora {
-  font-size: 30px;
-  font-weight: bold;
-}
-
-.botoes {
-  width: 100%;
-  display: flex;
-  justify-content: space-around;
-}
-
-.botao-tempo {
-  all: unset;
-  cursor: pointer;
-  background: rgb(27,30,47);
-  color: white;
-  border: 1px solid rgb(27,30,47);
-  border-radius: 0.5em;
-  padding: 5px 15px;
-  transition: background-color 0.2s;
-  font-size: 14px;
-}
-
-.botao-tempo:hover {
-  background-color: darkslategrey;
 }
 
 .acoes-header {

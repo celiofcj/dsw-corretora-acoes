@@ -19,38 +19,51 @@ const url = 'http://localhost:3000/movimentacao'
 const token = localStorage.getItem('authToken');
 
 const fetchContaCorrente = async () => {
-  const data: IContaCorrente = await fetch(url + '/contaCorrente',
-    {
-      headers: {
-        Authorization: 'Bearer ' + token
-      }
-    })
-    .then(response => {
-      if(response.status === 401) {
-        router.push('/login')
-      }
+  contaCorrente.value = await fetch(url + '/contaCorrente',
+      {
+        headers: {
+          Authorization: 'Bearer ' + token
+        }
+      })
+      .then(response => {
+        if (response.status === 401) {
+          router.push('/login')
+        }
 
-      if(!response.ok) {
-        throw new Error('Erro ao carregar o saldo da conta.')
-      }
+        if (!response.ok) {
+          throw new Error('Erro ao carregar o saldo da conta.')
+        }
 
-      return response.json()
-    })
-    .catch(error => {
-      erro.value = 'Erro ao carregar o saldo da conta.';
-      console.error(error);
-    })
-
-  contaCorrente.value = data;
+        return response.json()
+      })
+      .catch(error => {
+        erro.value = 'Erro ao carregar o saldo da conta.';
+        console.error(error);
+      });
 };
 
 const fetchMovimentacoes = async () => {
-  try {
-    //movimentacoes.value = data;
-  } catch (e) {
-    erro.value = 'Erro ao carregar as movimentações.';
-    console.error(e);
-  }
+
+    movimentacoes.value = await fetch(url + '/',
+        {
+          headers: {
+            Authorization: 'Bearer ' + token
+          }
+        })
+        .then(response => {
+          if (response.status === 401) {
+            router.push('/login')
+          }
+
+          if (!response.ok) {
+            throw new Error('Erro ao carregar as movimentações.')
+          }
+
+          return response.json()
+        })
+        .catch(error => {
+          console.error(error)
+        })
 };
 
 const onProcessComplete = () => {
@@ -148,22 +161,23 @@ const getTransactionTypeText = (tipo: TipoTransacaoId) => {
 }
 
 .balance-section {
-  background-color: #f0f8ff;
-  padding: 20px;
   border-radius: 8px;
   margin-bottom: 30px;
-  text-align: center;
+  text-align: left;
+  padding: 1em 1em 0 0;
 }
 
 .balance-section h2 {
   margin-top: 0;
   color: #333;
+  font-size: 1.25em;
 }
 
 .balance-value {
-  font-size: 2.5em;
+  margin-top: 0;
+  font-size: 1.5em;
   font-weight: bold;
-  color: #0056b3;
+  color: hsla(160, 100%, 37%, 1);
 }
 
 .transactions-section h2 {

@@ -46,5 +46,6 @@ const mostrarComponentes = computed(() => !rotasSemHeader.includes(router.path))
   border-radius: 1em;
   margin: 0;
   width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>

@@ -10,15 +10,14 @@ function processarMercado(minutos: number) {
 
 }
 
-emitter.on('time-process:start', (minutos) => {
-    console.log(`[DataProcessor] Evento 'time-process:start' recebido com: "${minutos}"`);
+emitter.on('time-process:start', (horaOperacao) => {
+    console.log('Recebido')
+    console.log(`[DataProcessor] Evento 'time-process:start' recebido com: ${horaOperacao}`);
 
-    processarCarteira(minutos);
-    processarMercado(minutos);
+    processarCarteira(horaOperacao.contadorMinutos);
+    processarMercado(horaOperacao.contadorMinutos);
 
     console.log(`[DataProcessor] Processamento concluído. Emitindo 'process:complete'.`);
 
-    emitter.emit('time-process:complete', null);
+    emitter.emit('time-process:complete', horaOperacao);
 });
-
-export const a = 1;

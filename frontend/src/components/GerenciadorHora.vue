@@ -5,14 +5,20 @@
   const hora = ref(12)
   const minuto = ref(0)
 
+  let contadorMinutos = 0
+
   function avancarMinutos(minutos: number) {
     console.log('Enviando notificação')
-    emitter.emit('time-process:start', minuto.value + minutos)
-
+    contadorMinutos += minutos
     const totalMinutos = hora.value * 60 + minuto.value + minutos
 
-    hora.value = Math.floor((totalMinutos % 1440) / 60)
-    minuto.value = totalMinutos % 60
+    const horaCalculada = Math.floor((totalMinutos % 1440) / 60)
+    const minutoCalculado = totalMinutos % 60
+
+    emitter.emit('time-process:start', { hora: horaCalculada, minuto: minutoCalculado, contadorMinutos })
+
+    hora.value = horaCalculada
+    minuto.value = minutoCalculado
   }
 
   const horaFormatada = computed(() => {

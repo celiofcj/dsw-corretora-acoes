@@ -1,9 +1,15 @@
 import mitt from 'mitt';
 
-type Events = {
-    'time-process:start': number;
+interface HoraOperacao {
+    hora: number
+    minuto: number
+    contadorMinutos: number
+}
 
-    'time-process:complete': null;
+type Events = {
+    'time-process:start': HoraOperacao;
+
+    'time-process:complete': HoraOperacao;
 };
 
 const emitter = mitt<Events>();

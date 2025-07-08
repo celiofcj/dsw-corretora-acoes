@@ -3,6 +3,7 @@ import { RouterView, useRoute } from 'vue-router'
 import { computed } from 'vue'
 import Nav from "@/components/Nav.vue";
 import GerenciadorHora from "@/components/GerenciadorHora.vue";
+import "@/processing/processador.ts";
 
 const router = useRoute();
 

@@ -1,6 +1,6 @@
 import mitt from 'mitt';
 
-interface HoraOperacao {
+export interface HoraOperacao {
     hora: number
     minuto: number
     contadorMinutos: number

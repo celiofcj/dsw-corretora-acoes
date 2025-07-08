@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, onUnmounted} from 'vue'
+import emitter, {type HoraOperacao} from "@/processing/eventBus.ts";
 
 interface Acao {
   _id: string
@@ -19,9 +20,8 @@ const carteiras = ref<Acao[]>([])
 const precosAtuais = ref<PrecoAtual[]>([])
 const loading = ref(true)
 
-// ❄️ Hora e minuto fixos (simulação)
-const hora = 14
-const minuto = 37
+let hora = 12
+let minuto = 0
 
 const fetchCarteiras = async () => {
   try {
@@ -62,7 +62,25 @@ const calcularRendimentoPercentual = (acao: Acao): number => {
   return ((atual - acao.precoCompra) / acao.precoCompra) * 100
 }
 
-onMounted(fetchCarteiras)
+const onProcessComplete = (horaOperacao: HoraOperacao) => {
+  console.log(`[Listener Carteira] Evento 'process:complete' recebido!`);
+  console.log(horaOperacao);
+  console.log(`[Listener Carteira] -------------------------------------`);
+  hora = horaOperacao.hora
+  minuto = horaOperacao.minuto
+  fetchCarteiras();
+};
+
+onMounted(() => {
+  fetchCarteiras()
+  emitter.on('time-process:complete', onProcessComplete);
+})
+
+onUnmounted(() => {
+  console.log('On unmount');
+  emitter.off('time-process:complete', onProcessComplete);
+});
+
 </script>
 
 <template>

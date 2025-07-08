@@ -1,70 +1,115 @@
 <script setup lang="ts">
+import { ref, computed, nextTick } from "vue";
+import { useRouter } from "vue-router";
+import {
+  validatePassword,
+  validatePasswordConfirmation
+} from '@/utils/validators';
 
-import {ref} from "vue";
-import {useRouter} from "vue-router";
+const router = useRouter();
 
-const router = useRouter()
+const senha = ref('');
+const confirmarSenha = ref('');
+const serverErrorMessage = ref('');
 
-const senha= ref('')
-const confirmarSenha = ref('')
-const errorMessage = ref('')
+const senhaTouched = ref(false);
+const confirmarSenhaTouched = ref(false);
+const isSubmitting = ref(false);
 
-const url = 'http://localhost:3000/acesso'
+const url = 'http://localhost:3000/acesso';
 const token = localStorage.getItem('authToken');
 
+const senhaError = computed(() => {
+  return senhaTouched.value ? validatePassword(senha.value) : '';
+});
+
+const confirmarSenhaError = computed(() => {
+  return confirmarSenhaTouched.value ? validatePasswordConfirmation(senha.value, confirmarSenha.value) : '';
+});
+
+const isFormInvalid = computed(() => {
+  return !!(validatePassword(senha.value) || validatePasswordConfirmation(senha.value, confirmarSenha.value));
+});
+
 const trocarSenha = async () => {
-  errorMessage.value = ''
+  serverErrorMessage.value = '';
+  senhaTouched.value = true;
+  confirmarSenhaTouched.value = true;
 
-  console.log(senha.value)
-  if(senha.value !== confirmarSenha.value) {
-    errorMessage.value = 'As senhas não coincidem'
-    return
+  await nextTick();
+
+  if (isFormInvalid.value) {
+    return;
   }
-  await fetch(url + '/trocarSenha', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      senha: senha.value
-    })
-  })
-      .then(response => {
-        if (response.status === 401) {
-          new Promise(r => setTimeout(r, 5000));
-          errorMessage.value = 'É preciso estar logado para trocar de senha!'
-          router.push('/login')
-        }
 
-        if(!response.ok) {
-          throw new Error('Ocorreu um erro ao trocar de senha')
-        }
+  isSubmitting.value = true;
 
-        router.push('/login')
-
+  try {
+    const response = await fetch(url + '/trocarSenha', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        senha: senha.value
       })
-      .catch(() => {
-        errorMessage.value = 'Ocorreu um erro ao trocar de senha'
-      });
-}
+    });
 
+    if (response.status === 401) {
+      serverErrorMessage.value = 'Sua sessão expirou. Faça login novamente.';
+      setTimeout(() => router.push('/login'), 3000);
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error('Ocorreu um erro ao trocar de senha.');
+    }
+
+    router.push('/login');
+
+  } catch (error: any) {
+    serverErrorMessage.value = error.message || 'Não foi possível conectar ao servidor.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
 </script>
 
 <template>
   <div class="configuracoesConta-container">
-    <form class="trocar-senha-form" @submit.prevent="trocarSenha">
+    <form class="trocar-senha-form" @submit.prevent="trocarSenha" novalidate>
       <h3>Trocar de senha</h3>
       <div class="form-group">
         <label for="nova-senha">Nova senha</label>
-        <input type="password" v-model="senha" required autocomplete="new-password">
+        <input
+            id="nova-senha"
+            type="password"
+            v-model="senha"
+            @blur="senhaTouched = true"
+            required
+            autocomplete="new-password"
+            :class="{'input-error': senhaError}"
+        >
+        <p v-if="senhaError" class="field-error-message">{{ senhaError }}</p>
       </div>
       <div class="form-group">
-        <label for="nova-senha">Confirmar nova senha</label>
-        <input type="password" v-model="confirmarSenha" required autocomplete="new-password">
+        <label for="confirmar-nova-senha">Confirmar nova senha</label>
+        <input
+            id="confirmar-nova-senha"
+            type="password"
+            v-model="confirmarSenha"
+            @blur="confirmarSenhaTouched = true"
+            required
+            autocomplete="new-password"
+            :class="{'input-error': confirmarSenhaError}"
+        >
+        <p v-if="confirmarSenhaError" class="field-error-message">{{ confirmarSenhaError }}</p>
       </div>
-      <button type="submit">Trocar senha</button>
-      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? 'Trocando...' : 'Trocar senha' }}
+      </button>
+      <p v-if="serverErrorMessage" class="error-message">{{ serverErrorMessage }}</p>
     </form>
   </div>
 </template>
@@ -95,6 +140,7 @@ h3 {
 .form-group {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
 }
 
 label {
@@ -114,6 +160,10 @@ input:focus {
   border-color: hsla(160, 100%, 37%, 1);
 }
 
+input.input-error {
+  border-color: #dc3545;
+}
+
 button {
   padding: 0.75rem;
   border: none;
@@ -126,7 +176,19 @@ button {
 }
 
 button:hover {
-  background-color: hsla(160, 100%, 37%, 1);
+  background-color: hsla(160, 100%, 37%, 0.8);
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.field-error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0;
 }
 
 .error-message {
@@ -136,9 +198,5 @@ button:hover {
   padding: 0.75rem;
   border-radius: 4px;
   text-align: center;
-}
-
-.links a:hover {
-  text-decoration: underline;
 }
 </style>

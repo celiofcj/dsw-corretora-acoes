@@ -5,6 +5,7 @@ import ContaCorrente from "@/components/movimentacao/ContaCorrente.vue";
 import Login from "@/components/Login.vue";
 import CriarConta from "@/components/CriarConta.vue";
 import RecuperarSenha from "@/components/RecuperarSenha.vue";
+import ConfiguracoesConta from "@/components/ConfiguracoesConta.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,6 +43,11 @@ const router = createRouter({
       path: '/conta',
       name: 'conta',
       component: ContaCorrente
+    },
+    {
+      path: '/configuracoes-conta',
+      name: 'configuracoes-conta',
+      component: ConfiguracoesConta
     }
   ],
 })

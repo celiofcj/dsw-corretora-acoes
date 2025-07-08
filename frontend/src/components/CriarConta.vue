@@ -8,10 +8,11 @@ const confirmarSenha = ref('');
 const errorMessage = ref('');
 const router = useRouter();
 
+const url = 'http://localhost:3000/acesso'
+
 const registrar = async () => {
   errorMessage.value = '';
 
-  const url = 'http://localhost:3000/acesso'
 
   if (senha.value !== confirmarSenha.value) {
     errorMessage.value = 'As senhas não coincidem.';

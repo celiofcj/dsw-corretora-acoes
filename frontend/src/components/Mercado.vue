@@ -161,6 +161,9 @@ onMounted(async () => {
       await fetchAcoesInteresse(); // Recarrega a lista
     }
 
+    emitter.on('time-now:response', onProcessComplete)
+    emitter.emit('time-now:request')
+
     // 4. Busca os preços iniciais
     await fetchPrecosAtuais();
   } catch (error) {

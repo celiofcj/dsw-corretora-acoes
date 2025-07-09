@@ -4,8 +4,7 @@ import ModalAdicionarAcao from './movimentacao/ModalAdicionarAcao.vue';
 import ModalComprarAcao from './movimentacao/ModalComparAcao.vue';
 import emitter, {type HoraOperacao} from "@/processing/eventBus.ts";
 
-// --- DEFINIÇÃO DE TIPOS ---
-interface AcaoMestra { // Renomeado para clareza
+interface AcaoMestra {
   ticker: string;
   fechamento: number;
 }
@@ -21,7 +20,6 @@ interface AcaoNaTabela extends IAcaoInteresse {
   fechamento?: number;
 }
 
-// --- ESTADO REATIVO ---
 let hora = 12;
 let minuto = 0;
 let todasAsAcoes: AcaoMestra[] = [];
@@ -140,10 +138,6 @@ function abrirModalCompra(acao: AcaoNaTabela) {
   mostrarModalCompra.value = true;
 }
 
-function handleOrdemCriada() {
-  alert('Ordem de compra enviada com sucesso!');
-}
-
 // --- CICLO DE VIDA DO COMPONENTE ---
 onMounted(async () => {
   try {
@@ -197,7 +191,6 @@ onUnmounted(() => {
       :hora-simulada="acaoSelecionadaParaCompra.hora"
       :minuto-simulado="acaoSelecionadaParaCompra.minuto"
       @fechar="mostrarModalCompra = false"
-      @ordem-criada="handleOrdemCriada"
   />
 
   <div class="container-mercado">
@@ -308,7 +301,7 @@ onUnmounted(() => {
 }
 @keyframes piscar {
   0% { background-color: transparent; }
-  50% { background-color: #e6f7ff; }
+  50% { background-color: #0A192F; }
   100% { background-color: transparent; }
 }
 

@@ -108,7 +108,7 @@ async function handleConfirmarCompra() {
             <input type="radio" v-model="tipoOrdem" value="mercado" /> A Mercado
           </label>
           <label>
-            <input type="radio" v-model="tipoOrdem" value="da" /> Agendada
+            <input type="radio" v-model="tipoOrdem" value="agendada" /> Agendada
           </label>
         </div>
       </div>

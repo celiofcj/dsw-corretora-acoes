@@ -16,8 +16,34 @@ interface PrecoAtual {
   preco: number
 }
 
+interface OrdemCompra {
+  id: string
+  dataHora: string
+  ticker: string
+  quantidade: number
+  executada: boolean
+  precoExecucao: number | null
+  precoReferenciaCompra: number
+  dataHoraExecucao: string | null
+  usuario: string
+}
+
+interface OrdemVenda {
+  id: string
+  dataHora: string
+  ticker: string
+  quantidade: number
+  executada: boolean
+  precoExecucao: number | null
+  precoReferenciaVenda: number
+  dataHoraExecucao: string | null
+  usuario: string
+}
+
 const carteiras = ref<Acao[]>([])
 const precosAtuais = ref<PrecoAtual[]>([])
+const vendas = ref<OrdemVenda[]>([])
+const compras = ref<OrdemCompra[]>([])
 const loading = ref(true)
 const tickersAtualizados = ref(new Set<string>())
 
@@ -41,6 +67,36 @@ const fetchCarteiras = async () => {
     console.error(e)
   } finally {
     loading.value = false
+  }
+}
+
+const fetchOrdemVenda = async () => {
+  try {
+    const token = localStorage.getItem('authToken')
+    const vendaRes = await fetch('http://localhost:3000/ordemVenda', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!vendaRes.ok) throw new Error('Erro ao buscar por ordens')
+    const todasOrdens = await vendaRes.json()
+    vendas.value = todasOrdens.filter((ordem: OrdemVenda) => !ordem.executada)
+
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const fetchOrdemCompra = async () => {
+  try {
+    const token = localStorage.getItem('authToken')
+    const compraRes = await fetch('http://localhost:3000/ordemCompra', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!compraRes.ok) throw new Error('Erro ao buscar por ordens')
+    const todasOrdens = await compraRes.json()
+    compras.value = todasOrdens.filter((ordem: OrdemCompra) => !ordem.executada)
+
+  } catch (e) {
+    console.error(e)
   }
 }
 
@@ -123,17 +179,22 @@ const confirmarVenda = async () => {
     console.error(e)
     alert('Erro ao registrar venda')
   }
+  fetchOrdemVenda()
 }
 
 const onProcessComplete = (horaOperacao: HoraOperacao) => {
   console.log(`Horário recebido ${hora}${minuto}`)
   hora.value = horaOperacao.hora
   minuto.value = horaOperacao.minuto
+  fetchOrdemCompra()
+  fetchOrdemVenda()
   fetchCarteiras()
 }
 
 onMounted(() => {
   console.log('Carteira mounted')
+  fetchOrdemCompra()
+  fetchOrdemVenda()
   fetchCarteiras()
   emitter.on('time-now:response', onProcessComplete)
   emitter.emit('time-now:request')
@@ -185,6 +246,50 @@ onUnmounted(() => {
         <td>
           <button class="botao-remover" @click="abrirModalVenda(acao)">Vender</button>
         </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="acoes-header" v-if="compras.length">
+      <h3>Compras Agendadas</h3>
+    </div>
+    <table class="tabela-acoes" v-if="compras.length">
+      <thead>
+      <tr>
+        <th>Data</th>
+        <th>Ticker</th>
+        <th>Qtd</th>
+        <th>Preço Ref. (R$)</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="ordem in compras" :key="ordem.id">
+        <td>{{ ordem.dataHora.replace('T', ' ').substring(0, 16) }}</td>
+        <td>{{ ordem.ticker }}</td>
+        <td>{{ ordem.quantidade }}</td>
+        <td>{{ ordem.precoReferenciaCompra }}</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="acoes-header" v-if="vendas.length" style="margin-top: 24px">
+      <h3>Vendas Agendadas</h3>
+    </div>
+    <table class="tabela-acoes" v-if="vendas.length">
+      <thead>
+      <tr>
+        <th>Data</th>
+        <th>Ticker</th>
+        <th>Qtd</th>
+        <th>Preço Ref. (R$)</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="ordem in vendas" :key="ordem.id">
+        <td>{{ ordem.dataHora.replace('T', ' ').substring(0, 16) }}</td>
+        <td>{{ ordem.ticker }}</td>
+        <td>{{ ordem.quantidade }}</td>
+        <td>{{ ordem.precoReferenciaVenda }}</td>
       </tr>
       </tbody>
     </table>

@@ -1,4 +1,4 @@
-import emitter, {type HoraOperacao} from './eventBus';
+import emitter, {type HoraOperacao, type HoraOperacaoAtualizacao} from './eventBus';
 
 console.log('DataProcessor Singleton: Inicializado e pronto para escutar eventos.');
 
@@ -83,7 +83,7 @@ async function executarOrdemCompra(ordem: IOrdemCompra, preco: number, dataHora:
 }
 
 
-async function processarCarteira(minutos: number, tickers: any, dataHora: string) {
+async function processarCarteira(tickers: any, dataHora: string) {
     console.log('Iniciando processamento carteira');
     const token = localStorage.getItem('authToken');
 
@@ -127,7 +127,7 @@ async function processarCarteira(minutos: number, tickers: any, dataHora: string
     return Promise.all(promises)
 }
 
-async function processarMercado(minutos: number, tickers: any, dataHora: string) {
+async function processarMercado(tickers: any, dataHora: string) {
     console.log('Iniciando processamento mercado');
     const token = localStorage.getItem('authToken');
 
@@ -191,18 +191,23 @@ function getHoraOperacao(horaOperacao: HoraOperacao) {
     return  dataServidor.toISOString()
 }
 
-emitter.on('time-process:start', async (horaOperacao: HoraOperacao) => {
-    console.log('Recebido')
+emitter.on('time-process:start', async (horaOperacao: HoraOperacaoAtualizacao) => {
     console.log(`[DataProcessor] Evento 'time-process:start' recebido com: ${horaOperacao}`);
 
-    const tickers = obtemTickers(horaOperacao.minuto)
+    for(let i = horaOperacao.minutoAnterior; i <= horaOperacao.minuto; i++) {
+        console.log(`[DataProcessor] Processando minuto ${i}`)
 
-    const dataHora = getHoraOperacao(horaOperacao)
+        const tickers = obtemTickers(i)
 
-    await processarCarteira(horaOperacao.minuto, tickers, dataHora);
-    await processarMercado(horaOperacao.minuto, tickers, dataHora);
+        console.log(await tickers)
 
-    console.log(`[DataProcessor] Processamento concluído. Emitindo 'process:complete'.`);
+        const dataHora = getHoraOperacao(horaOperacao)
 
-    emitter.emit('time-process:complete', horaOperacao);
+        await processarCarteira(tickers, dataHora);
+        await processarMercado(tickers, dataHora);
+
+        console.log(`[DataProcessor] Processamento concluído. Emitindo 'process:complete'.`);
+
+        emitter.emit('time-process:complete', horaOperacao);
+    }
 });

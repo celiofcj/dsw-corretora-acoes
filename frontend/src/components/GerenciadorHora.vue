@@ -64,7 +64,7 @@ import {computed, onBeforeMount, onMounted, ref} from "vue";
     const horaCalculada = Math.floor((totalMinutos % 1440) / 60)
     const minutoCalculado = totalMinutos % 60
 
-    emitter.emit('time-process:start', { hora: horaCalculada, minuto: minutoCalculado })
+    emitter.emit('time-process:start', { hora: horaCalculada, minuto: minutoCalculado, minutoAnterior: minuto.value })
 
     registrarHorarioAtual(horaCalculada, minutoCalculado)
     hora.value = horaCalculada
@@ -83,7 +83,7 @@ import {computed, onBeforeMount, onMounted, ref} from "vue";
 
   onMounted(async ()=> {
     await obterHorarioAtual()
-    emitter.emit('time-process:start', { hora: hora.value, minuto: minuto.value })
+    emitter.emit('time-process:start', { hora: hora.value, minuto: minuto.value, minutoAnterior: minuto.value })
     emitter.on('time-now:request', ()=> {
       emitter.emit('time-now:response', {hora: hora.value, minuto: minuto.value})
     })

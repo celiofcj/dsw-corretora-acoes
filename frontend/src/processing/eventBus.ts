@@ -5,8 +5,14 @@ export interface HoraOperacao {
     minuto: number
 }
 
+export interface HoraOperacaoAtualizacao {
+    hora: number
+    minuto: number
+    minutoAnterior: number
+}
+
 type Events = {
-    'time-process:start': HoraOperacao;
+    'time-process:start': HoraOperacaoAtualizacao;
 
     'time-process:complete': HoraOperacao;
 

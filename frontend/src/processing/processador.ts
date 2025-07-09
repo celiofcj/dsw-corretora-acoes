@@ -17,7 +17,18 @@ interface IOrdemVenda  {
     id: string
 }
 
-async function executarOrdem(ordem: IOrdemVenda, preco: number, dataHora: string) {
+export interface IOrdemCompra {
+    ticker : string;
+    quantidade : number;
+    executada: boolean;
+    dataHora : Date;
+    precoReferenciaCompra: number;
+    dataHoraExecucao?: Date;
+    precoExecucao?: number;
+    id: string
+}
+
+async function executarOrdemVenda(ordem: IOrdemVenda, preco: number, dataHora: string) {
     console.log(dataHora)
     const token = localStorage.getItem('authToken');
 
@@ -35,6 +46,7 @@ async function executarOrdem(ordem: IOrdemVenda, preco: number, dataHora: string
         .then(response => {
             if(response.ok) {
                 console.log(`Ordem de venda ${ordem.id} executada com sucesso`)
+                return response.json()
             }
 
             throw new Error('Erro ao executar ordem de venda')
@@ -43,6 +55,33 @@ async function executarOrdem(ordem: IOrdemVenda, preco: number, dataHora: string
             console.log(`Erro ao executar ordem de venda ${ordem.id}`)
         })
 }
+
+async function executarOrdemCompra(ordem: IOrdemCompra, preco: number, dataHora: string) {
+    const token = localStorage.getItem('authToken');
+
+    return fetch(`${url}/ordemCompra/${ordem.id}/executar`, {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            dataHora: dataHora,
+            preco: preco
+        })
+    })
+        .then(response => {
+            if (response.ok) {
+                console.log(`Ordem de compra ${ordem.id} executada com sucesso`);
+                return response.json();
+            }
+            throw new Error('Erro ao executar ordem de compra');
+        })
+        .catch(() => {
+            console.log(`Erro ao executar ordem de compra ${ordem.id}`);
+        });
+}
+
 
 async function processarCarteira(minutos: number, tickers: any, dataHora: string) {
     console.log('Iniciando processamento carteira');
@@ -81,7 +120,7 @@ async function processarCarteira(minutos: number, tickers: any, dataHora: string
             if (precoAtual !== undefined && precoAtual >= ordem.precoReferenciaVenda) {
                 console.log(`Condição de venda para ${ordem.ticker} atingida. Preço de referência: ${ordem.precoReferenciaVenda}, Preço atual: ${precoAtual}.`);
 
-                return executarOrdem(ordem, precoAtual, dataHora)
+                return executarOrdemVenda(ordem, precoAtual, dataHora)
             }
         });
 
@@ -89,7 +128,44 @@ async function processarCarteira(minutos: number, tickers: any, dataHora: string
 }
 
 async function processarMercado(minutos: number, tickers: any, dataHora: string) {
+    console.log('Iniciando processamento mercado');
+    const token = localStorage.getItem('authToken');
 
+    const tickersMap = await tickers;
+    if (!tickersMap) {
+        console.error('Não foi possível obter o mapa de tickers.');
+        return;
+    }
+
+    const ordensCompra = await fetch(url + '/ordemCompra', {
+        headers:{
+            Authorization: 'Bearer ' + token,
+        }
+    }).then(response => {
+        if(!response.ok) {
+            console.error('Não foi possível processar mercado');
+            return [];
+        }
+        console.log('Processando mercado');
+        return response.json();
+    })
+        .then(json => json as IOrdemCompra[])
+        .catch(error => {
+            console.error('Erro ao buscar ordens de compra:', error);
+            return [];
+        });
+
+    const promises = ordensCompra
+        .filter(ordem => !ordem.executada)
+        .map(ordem => {
+            const precoAtual = tickersMap.get(ordem.ticker);
+            if(precoAtual !== undefined && precoAtual <= ordem.precoReferenciaCompra) {
+                console.log(`Condição de compra para ${ordem.ticker} atingida. Preço de referência: ${ordem.precoReferenciaCompra}, Preço atual: ${precoAtual}.`);
+                return executarOrdemCompra(ordem, precoAtual, dataHora);
+            }
+        });
+
+    return Promise.all(promises);
 }
 
 async function obtemTickers(minuto: number) {

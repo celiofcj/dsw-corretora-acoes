@@ -1,22 +1,18 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits } from 'vue';
 
-// Define as propriedades que o componente pai (Mercado.vue) irá passar para este modal
 const props = defineProps<{
   acoes: { ticker: string; fechamento: number }[];
 }>();
 
-// Define os eventos que este componente pode emitir para o componente pai
 const emit = defineEmits(['fechar', 'adicionar']);
 
-// Estado reativo para armazenar o ticker da ação selecionada no dropdown
 const tickerSelecionado = ref<string | null>(null);
 
-// Função para lidar com o clique no botão de adicionar
 function handleAdicionar() {
   if (tickerSelecionado.value) {
-    emit('adicionar', tickerSelecionado.value); // Emite o evento 'adicionar' com o ticker
-    emit('fechar'); // Emite o evento para fechar o modal
+    emit('adicionar', tickerSelecionado.value);
+    emit('fechar');
   }
 }
 </script>

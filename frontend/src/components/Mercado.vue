@@ -28,7 +28,7 @@ const tickersAtualizados = ref(new Set<string>());
 const mostrarModal = ref(false);
 const carregando = ref(true);
 const acoesDeInteresse = ref<IAcaoInteresse[]>([]);
-const mostrarModalCompra = ref(false); // 2. Adicione estado para controlar o modal
+const mostrarModalCompra = ref(false);
 const acaoSelecionadaParaCompra = ref<{ acao: AcaoNaTabela, hora: number, minuto: number } | null>(null);
 
 
@@ -77,7 +77,6 @@ async function descerAcao(id: string) {
   await fetchAcoesInteresse();
 }
 
-// --- LÓGICA DE DADOS (Preços) ---
 const TICKERS_URL = 'https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/tickers.json';
 const PRECO_URL_BASE = 'https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/';
 
@@ -99,7 +98,6 @@ async function fetchPrecosAtuais() {
   }
 }
 
-// --- PROPRIEDADES COMPUTADAS ---
 const acoesNaTabela = computed((): AcaoNaTabela[] => {
   const mapaFechamento = new Map(todasAsAcoes.map(a => [a.ticker, a.fechamento]));
   return acoesDeInteresse.value.map(interesse => ({
@@ -114,7 +112,6 @@ const acoesDisponiveis = computed(() => {
   return todasAsAcoes.filter(a => !tickersVisiveis.has(a.ticker));
 });
 
-// --- LÓGICA DE CONTROLE (Modal e Event Bus) ---
 async function handleAdicionarAcao(ticker: string) {
   const proximaOrdem = acoesDeInteresse.value.length;
   await salvarAcaoInteresse(ticker, proximaOrdem);
@@ -128,7 +125,6 @@ const onProcessComplete = (horaOperacao: HoraOperacao) => {
   fetchPrecosAtuais();
 };
 
-// 3. Adicione a função para abrir o modal
 function abrirModalCompra(acao: AcaoNaTabela) {
   acaoSelecionadaParaCompra.value = {
     acao: acao,
@@ -138,31 +134,26 @@ function abrirModalCompra(acao: AcaoNaTabela) {
   mostrarModalCompra.value = true;
 }
 
-// --- CICLO DE VIDA DO COMPONENTE ---
 onMounted(async () => {
   try {
     emitter.on('time-process:complete', onProcessComplete);
 
-    // 1. Busca a lista mestra
     const response = await fetch(TICKERS_URL);
     todasAsAcoes = await response.json();
 
-    // 2. Busca as ações de interesse do backend
     await fetchAcoesInteresse();
 
-    // 3. Se for novo usuário, gera e salva 10 ações
     if (acoesDeInteresse.value.length === 0) {
       const acoesIniciais = [...todasAsAcoes].sort(() => 0.5 - Math.random()).slice(0, 10);
       for (let i = 0; i < acoesIniciais.length; i++) {
         await salvarAcaoInteresse(acoesIniciais[i].ticker, i);
       }
-      await fetchAcoesInteresse(); // Recarrega a lista
+      await fetchAcoesInteresse();
     }
 
     emitter.on('time-now:response', onProcessComplete)
     emitter.emit('time-now:request')
 
-    // 4. Busca os preços iniciais
     await fetchPrecosAtuais();
   } catch (error) {
     console.error("Erro ao inicializar o componente:", error);
@@ -285,7 +276,6 @@ onUnmounted(() => {
   color: #333;
 }
 
-/* Estilos de cor para rendimento */
 .positivo {
   color: #1a9c5a;
   font-weight: 500;
@@ -295,7 +285,6 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-/* Animação para piscar */
 .blink {
   animation: piscar 0.7s ease-in-out;
 }
@@ -305,9 +294,6 @@ onUnmounted(() => {
   100% { background-color: transparent; }
 }
 
-/* --- ESTILOS DOS BOTÕES --- */
-
-/* Botão principal de Adicionar Ação */
 .botao-adicionar {
   all: unset;
   cursor: pointer;
@@ -323,7 +309,6 @@ onUnmounted(() => {
   background-color: #2ecc71;
 }
 
-/* Estilo base para botões dentro da tabela */
 .botao-tabela {
   all: unset;
   cursor: pointer;
@@ -338,7 +323,6 @@ onUnmounted(() => {
   opacity: 0.9;
 }
 
-/* Botões específicos */
 .botao-comprar {
   background-color: #27ae60;
 }

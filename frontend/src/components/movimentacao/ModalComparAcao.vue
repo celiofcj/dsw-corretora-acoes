@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, computed } from 'vue';
 
-// --- DEFINIÇÃO DE TIPOS ---
 interface AcaoParaCompra {
   ticker: string;
   preco?: number;
@@ -12,19 +11,17 @@ interface PedidoOrdemCompra {
   quantidade: number;
   preco: number;
   executada: boolean;
-  dataHora: string; // Corrigido para string
+  dataHora: string;
 }
 
-// --- PROPRIEDADES E EVENTOS ---
 const props = defineProps<{
   acao: AcaoParaCompra;
-  horaSimulada: number; // Recebe a hora da simulação
-  minutoSimulado: number; // Recebe o minuto da simulação
+  horaSimulada: number;
+  minutoSimulado: number;
 }>();
 
 const emit = defineEmits(['fechar', 'ordemCriada']);
 
-// --- ESTADO REATIVO DO FORMULÁRIO ---
 const tipoOrdem = ref<'mercado' | 'agendada'>('mercado');
 const quantidade = ref<number>(1);
 const precoAgendado = ref<number>(props.acao.preco ?? 0);
@@ -37,12 +34,10 @@ const isFormInvalido = computed(() => {
   return false;
 });
 
-// --- LÓGICA DE SUBMISSÃO ---
 async function handleConfirmarCompra() {
   erroApi.value = null;
   carregando.value = true;
 
-  // Lógica para gerar a data/hora simulada
   const agora = new Date();
   const dataServidor = new Date(
       agora.getFullYear(),
@@ -54,7 +49,6 @@ async function handleConfirmarCompra() {
   dataServidor.setHours(dataServidor.getHours());
   const dataHoraSimulada = dataServidor.toISOString();
 
-  // Monta o payload para a API
   const payload: PedidoOrdemCompra = {
     ticker: props.acao.ticker,
     quantidade: quantidade.value,

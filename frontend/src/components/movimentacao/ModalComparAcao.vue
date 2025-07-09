@@ -25,15 +25,15 @@ const props = defineProps<{
 const emit = defineEmits(['fechar', 'ordemCriada']);
 
 // --- ESTADO REATIVO DO FORMULÁRIO ---
-const tipoOrdem = ref<'mercado' | 'limite'>('mercado');
+const tipoOrdem = ref<'mercado' | 'agendada'>('mercado');
 const quantidade = ref<number>(1);
-const precoLimite = ref<number>(props.acao.preco ?? 0);
+const precoAgendado = ref<number>(props.acao.preco ?? 0);
 const carregando = ref(false);
 const erroApi = ref<string | null>(null);
 
 const isFormInvalido = computed(() => {
   if (quantidade.value <= 0) return true;
-  if (tipoOrdem.value === 'limite' && precoLimite.value <= 0) return true;
+  if (tipoOrdem.value === 'agendada' && precoAgendado.value <= 0) return true;
   return false;
 });
 
@@ -59,7 +59,7 @@ async function handleConfirmarCompra() {
     ticker: props.acao.ticker,
     quantidade: quantidade.value,
     dataHora: dataHoraSimulada,
-    preco: tipoOrdem.value === 'mercado' ? (props.acao.preco ?? 0) : precoLimite.value,
+    preco: tipoOrdem.value === 'mercado' ? (props.acao.preco ?? 0) : precoAgendado.value,
     executada: tipoOrdem.value === 'mercado'
   };
 
@@ -108,14 +108,14 @@ async function handleConfirmarCompra() {
             <input type="radio" v-model="tipoOrdem" value="mercado" /> A Mercado
           </label>
           <label>
-            <input type="radio" v-model="tipoOrdem" value="limite" /> Limitada
+            <input type="radio" v-model="tipoOrdem" value="da" /> Agendada
           </label>
         </div>
       </div>
 
-      <div v-if="tipoOrdem === 'limite'" class="form-group">
-        <label for="preco-limite">Preço Limite (Comprar se <=):</label>
-        <input type="number" id="preco-limite" v-model.number="precoLimite" step="0.01" class="form-input"/>
+      <div v-if="tipoOrdem === 'agendada'" class="form-group">
+        <label for="preco-agendado">Preço Agendado (Comprar se <=):</label>
+        <input type="number" id="preco-agendado" v-model.number="precoAgendado" step="0.01" class="form-input"/>
       </div>
 
       <div v-if="erroApi" class="error-message">{{ erroApi }}</div>

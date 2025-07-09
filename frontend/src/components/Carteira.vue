@@ -58,13 +58,16 @@ const calcularRendimentoPercentual = (acao: Acao): number => {
   return ((atual - acao.precoCompra) / acao.precoCompra) * 100
 }
 
-// Venda a mercado
 const acaoSelecionada = ref<Acao | null>(null)
 const quantidadeVenda = ref(1)
+const tipoVenda = ref<'mercado' | 'agendada'>('mercado')
+const precoAgendado = ref<number | null>(null)
 
 const abrirModalVenda = (acao: Acao) => {
   acaoSelecionada.value = acao
   quantidadeVenda.value = 1
+  tipoVenda.value = 'mercado'
+  precoAgendado.value = null
 }
 
 const fecharModalVenda = () => {
@@ -74,14 +77,32 @@ const fecharModalVenda = () => {
 const confirmarVenda = async () => {
   if (!acaoSelecionada.value) return
 
-  const precoAtual = obterPrecoAtual(acaoSelecionada.value.ticker)
+  const preco = tipoVenda.value === 'mercado'
+      ? obterPrecoAtual(acaoSelecionada.value.ticker)
+      : precoAgendado.value
+
+  if (preco === null || quantidadeVenda.value < 1) {
+    alert('Preencha todos os dados da venda corretamente.')
+    return
+  }
+
+  const agora = new Date()
+  const dataServidor = new Date(
+      agora.getFullYear(),
+      agora.getMonth(),
+      agora.getDate(),
+      hora,
+      minuto
+  )
+  dataServidor.setHours(dataServidor.getHours() - 3)
+  const dataHoraSimulada = dataServidor.toISOString()
 
   const venda = {
-    dataHora: new Date().toISOString(),
+    dataHora: dataHoraSimulada,
     ticker: acaoSelecionada.value.ticker,
     quantidade: quantidadeVenda.value,
-    executada: true,
-    preco: precoAtual
+    executada: tipoVenda.value === 'mercado',
+    preco: preco
   }
 
   try {
@@ -106,7 +127,6 @@ const confirmarVenda = async () => {
 }
 
 const onProcessComplete = (horaOperacao: HoraOperacao) => {
-  console.log(`[Listener Carteira] Evento 'process:complete' recebido!`)
   hora = horaOperacao.hora
   minuto = horaOperacao.minuto
   fetchCarteiras()
@@ -150,20 +170,10 @@ onUnmounted(() => {
         <td>{{ acao.quantidade }}</td>
         <td>{{ acao.precoCompra.toFixed(2) }}</td>
         <td>{{ obterPrecoAtual(acao.ticker).toFixed(2) }}</td>
-        <td
-            :class="{
-              positivo: calcularRendimento(acao) > 0,
-              negativo: calcularRendimento(acao) < 0
-            }"
-        >
+        <td :class="{ positivo: calcularRendimento(acao) > 0, negativo: calcularRendimento(acao) < 0 }">
           {{ calcularRendimento(acao).toFixed(2) }}
         </td>
-        <td
-            :class="{
-              positivo: calcularRendimento(acao) > 0,
-              negativo: calcularRendimento(acao) < 0
-            }"
-        >
+        <td :class="{ positivo: calcularRendimento(acao) > 0, negativo: calcularRendimento(acao) < 0 }">
           {{ calcularRendimentoPercentual(acao).toFixed(2) }}%
         </td>
         <td>
@@ -173,15 +183,35 @@ onUnmounted(() => {
       </tbody>
     </table>
 
-    <!-- Modal de venda -->
+    <!-- Modal de Venda -->
     <div v-if="acaoSelecionada" class="modal">
       <div class="modal-conteudo">
         <h3>Venda de {{ acaoSelecionada.ticker }}</h3>
 
         <label>
-          Quantidade a vender:
-          <input type="number" v-model.number="quantidadeVenda" :max="acaoSelecionada.quantidade" min="1" />
+          Quantidade:
+          <input
+              type="number"
+              v-model.number="quantidadeVenda"
+              :max="acaoSelecionada.quantidade"
+              min="1"
+          />
         </label>
+
+        <label>
+          Tipo de venda:
+          <select v-model="tipoVenda">
+            <option value="mercado">Mercado</option>
+            <option value="agendada">Agendada</option>
+          </select>
+        </label>
+
+        <div v-if="tipoVenda === 'agendada'">
+          <label>
+            Preço desejado:
+            <input type="number" v-model.number="precoAgendado" step="0.01" min="0.01" />
+          </label>
+        </div>
 
         <div class="modal-botoes">
           <button @click="confirmarVenda">Confirmar</button>
@@ -241,7 +271,6 @@ onUnmounted(() => {
   background-color: #c43a3a;
 }
 
-/* Modal */
 .modal {
   position: fixed;
   top: 0;

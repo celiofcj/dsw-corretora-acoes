@@ -3,7 +3,6 @@ import mitt from 'mitt';
 export interface HoraOperacao {
     hora: number
     minuto: number
-    contadorMinutos: number
 }
 
 type Events = {

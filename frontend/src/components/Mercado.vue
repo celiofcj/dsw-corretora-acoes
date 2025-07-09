@@ -1,105 +1,172 @@
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
-import ModalAdicionarAcao from './ModalAdicionarAcao.vue';
-import emitter, {type HoraOperacao} from "@/processing/eventBus.ts"; // Importe o novo componente
+import {computed, onMounted, onUnmounted, ref} from 'vue';
+import ModalAdicionarAcao from './movimentacao/ModalAdicionarAcao.vue';
+import ModalComprarAcao from './movimentacao/ModalComparAcao.vue';
+import emitter, {type HoraOperacao} from "@/processing/eventBus.ts";
 
 // --- DEFINIÇÃO DE TIPOS ---
-interface Acao {
+interface AcaoMestra { // Renomeado para clareza
   ticker: string;
   fechamento: number;
-  preco?: number;
 }
 
-// --- ESTADO REATIVO (REFS) ---
+export interface IAcaoInteresse {
+  _id: string;
+  ticker: string;
+  ordem: number;
+}
+
+interface AcaoNaTabela extends IAcaoInteresse {
+  preco?: number;
+  fechamento?: number;
+}
+
+// --- ESTADO REATIVO ---
 let hora = 12;
 let minuto = 0;
-const acoesVisiveis = ref<Acao[]>([]);
-let todasAsAcoes: Acao[] = [];
+let todasAsAcoes: AcaoMestra[] = [];
+const precosAtuaisMap = ref(new Map<string, number>());
 const tickersAtualizados = ref(new Set<string>());
 const mostrarModal = ref(false);
+const carregando = ref(true);
+const acoesDeInteresse = ref<IAcaoInteresse[]>([]);
+const mostrarModalCompra = ref(false); // 2. Adicione estado para controlar o modal
+const acaoSelecionadaParaCompra = ref<AcaoNaTabela | null>(null);
 
-// --- PERSISTÊNCIA (localStorage) ---
 
-// Salva a lista de tickers visíveis no localStorage sempre que ela mudar
-watch(acoesVisiveis, (newAcoes) => {
-  const tickers = newAcoes.map(a => a.ticker);
-  localStorage.setItem('acoesVisiveis', JSON.stringify(tickers));
-}, { deep: true });
+async function fetchAcoesInteresse() {
+  const token = localStorage.getItem('authToken');
+  const response = await fetch('http://localhost:3000/acaoInteresse/', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error('Falha ao buscar ações de interesse.');
+  acoesDeInteresse.value = await response.json();
+}
 
-// --- LÓGICA DE DADOS (API) ---
+async function salvarAcaoInteresse(ticker: string, ordem: number) {
+  const token = localStorage.getItem('authToken');
+  await fetch('http://localhost:3000/acaoInteresse/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ ticker, ordem })
+  });
+}
+
+async function removerAcaoInteresse(id: string) {
+  const token = localStorage.getItem('authToken');
+  await fetch(`http://localhost:3000/acaoInteresse/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  await fetchAcoesInteresse();
+}
+
+async function subirAcao(id: string) {
+  const token = localStorage.getItem('authToken');
+  await fetch(`http://localhost:3000/acaoInteresse/${id}/subir`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  await fetchAcoesInteresse();
+}
+
+async function descerAcao(id: string) {
+  const token = localStorage.getItem('authToken');
+  await fetch(`http://localhost:3000/acaoInteresse/${id}/descer`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  await fetchAcoesInteresse();
+}
+
+// --- LÓGICA DE DADOS (Preços) ---
 const TICKERS_URL = 'https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/tickers.json';
 const PRECO_URL_BASE = 'https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/';
 
 async function fetchPrecosAtuais() {
   try {
     const response = await fetch(`${PRECO_URL_BASE}${minuto}.json`);
-    const precosAtuais: { ticker: string, preco: number }[] = await response.json();
+    const precos: { ticker: string, preco: number }[] = await response.json();
     tickersAtualizados.value.clear();
-    const mapaPrecos = new Map(precosAtuais.map(p => [p.ticker, p.preco]));
-    acoesVisiveis.value.forEach(acao => {
-      const novoPreco = mapaPrecos.get(acao.ticker);
-      if (novoPreco && acao.preco !== novoPreco) {
-        acao.preco = novoPreco;
-        tickersAtualizados.value.add(acao.ticker);
+    const novoMapa = new Map(precos.map(p => [p.ticker, p.preco]));
+    novoMapa.forEach((preco, ticker) => {
+      if (precosAtuaisMap.value.get(ticker) !== preco) {
+        tickersAtualizados.value.add(ticker);
       }
     });
+    precosAtuaisMap.value = novoMapa;
     setTimeout(() => tickersAtualizados.value.clear(), 1000);
   } catch (error) {
     console.error('Erro ao buscar preços atuais:', error);
   }
 }
 
-// --- LÓGICA DE MANIPULAÇÃO DA TABELA ---
+// --- PROPRIEDADES COMPUTADAS ---
+const acoesNaTabela = computed((): AcaoNaTabela[] => {
+  const mapaFechamento = new Map(todasAsAcoes.map(a => [a.ticker, a.fechamento]));
+  return acoesDeInteresse.value.map(interesse => ({
+    ...interesse,
+    preco: precosAtuaisMap.value.get(interesse.ticker),
+    fechamento: mapaFechamento.get(interesse.ticker)
+  }));
+});
 
 const acoesDisponiveis = computed(() => {
-  const tickersVisiveis = new Set(acoesVisiveis.value.map(a => a.ticker));
+  const tickersVisiveis = new Set(acoesDeInteresse.value.map(a => a.ticker));
   return todasAsAcoes.filter(a => !tickersVisiveis.has(a.ticker));
 });
 
-function adicionarAcao(ticker: string) {
-  const acaoParaAdicionar = todasAsAcoes.find(a => a.ticker === ticker);
-  if (acaoParaAdicionar) {
-    acoesVisiveis.value.push(JSON.parse(JSON.stringify(acaoParaAdicionar)));
-    fetchPrecosAtuais();
-  }
-}
-
-function removerAcao(tickerParaRemover: string) {
-  acoesVisiveis.value = acoesVisiveis.value.filter(
-      (acao) => acao.ticker !== tickerParaRemover
-  );
+// --- LÓGICA DE CONTROLE (Modal e Event Bus) ---
+async function handleAdicionarAcao(ticker: string) {
+  const proximaOrdem = acoesDeInteresse.value.length;
+  await salvarAcaoInteresse(ticker, proximaOrdem);
+  await fetchAcoesInteresse();
 }
 
 const onProcessComplete = (horaOperacao: HoraOperacao) => {
   console.log(`[Listener Mercado] Evento 'process:complete' recebido!`);
-  console.log(horaOperacao);
-  console.log(`[Listener Mercado] -------------------------------------`);
-  hora = horaOperacao.hora
-  minuto = horaOperacao.minuto
-  fetchPrecosAtuais()
+  hora = horaOperacao.hora;
+  minuto = horaOperacao.minuto;
+  fetchPrecosAtuais();
 };
+
+// 3. Adicione a função para abrir o modal
+function abrirModalCompra(acao: AcaoNaTabela) {
+  acaoSelecionadaParaCompra.value = acao;
+  mostrarModalCompra.value = true;
+}
+
+function handleOrdemCriada() {
+  alert('Ordem de compra enviada com sucesso!');
+}
 
 // --- CICLO DE VIDA DO COMPONENTE ---
 onMounted(async () => {
   try {
     emitter.on('time-process:complete', onProcessComplete);
 
+    // 1. Busca a lista mestra
     const response = await fetch(TICKERS_URL);
     todasAsAcoes = await response.json();
 
-    const tickersSalvos = localStorage.getItem('acoesVisiveis');
-    if (tickersSalvos) {
-      const tickers: string[] = JSON.parse(tickersSalvos);
-      acoesVisiveis.value = tickers.map(ticker => todasAsAcoes.find(a => a.ticker === ticker)).filter(Boolean) as Acao[];
-    } else {
-      // Se não houver lista salva (primeira visita), escolhe 10 aleatoriamente [cite: 20]
-      acoesVisiveis.value = [...todasAsAcoes].sort(() => 0.5 - Math.random()).slice(0, 10);
+    // 2. Busca as ações de interesse do backend
+    await fetchAcoesInteresse();
+
+    // 3. Se for novo usuário, gera e salva 10 ações
+    if (acoesDeInteresse.value.length === 0) {
+      const acoesIniciais = [...todasAsAcoes].sort(() => 0.5 - Math.random()).slice(0, 10);
+      for (let i = 0; i < acoesIniciais.length; i++) {
+        await salvarAcaoInteresse(acoesIniciais[i].ticker, i);
+      }
+      await fetchAcoesInteresse(); // Recarrega a lista
     }
 
-    // Busca os preços para o horário inicial (14:00)
+    // 4. Busca os preços iniciais
     await fetchPrecosAtuais();
   } catch (error) {
     console.error("Erro ao inicializar o componente:", error);
+  } finally {
+    carregando.value = false;
   }
 });
 
@@ -107,7 +174,6 @@ onUnmounted(() => {
   console.log('On unmount');
   emitter.off('time-process:complete', onProcessComplete);
 });
-
 </script>
 
 <template>
@@ -115,18 +181,28 @@ onUnmounted(() => {
       v-if="mostrarModal"
       :acoes="acoesDisponiveis"
       @fechar="mostrarModal = false"
-      @adicionar="adicionarAcao"
+      @adicionar="handleAdicionarAcao"
+  />
+
+  <ModalComprarAcao
+      v-if="mostrarModalCompra && acaoSelecionadaParaCompra"
+      :acao="acaoSelecionadaParaCompra"
+      @fechar="mostrarModalCompra = false"
+      @ordem-criada="handleOrdemCriada"
   />
 
   <div class="container-mercado">
     <div class="acoes-header">
-      <h2>Ações no Mercado</h2>
+      <h2>Ações de Interesse</h2>
       <button @click="mostrarModal = true" class="botao-adicionar">Adicionar Ação</button>
     </div>
 
-    <table class="tabela-acoes">
+    <div v-if="carregando">Carregando mercado...</div>
+
+    <table v-else class="tabela-acoes">
       <thead>
       <tr>
+        <th>Ordem</th>
         <th>Ticker</th>
         <th>Preço</th>
         <th>Variação $</th>
@@ -136,30 +212,38 @@ onUnmounted(() => {
       </thead>
       <tbody>
       <tr
-          v-for="acao in acoesVisiveis"
-          :key="acao.ticker"
+          v-for="(acao, index) in acoesNaTabela"
+          :key="acao._id"
           :class="{ blink: tickersAtualizados.has(acao.ticker) }"
       >
+        <td class="coluna-ordem">
+          <button @click="subirAcao(acao._id)" :disabled="index === 0" class="botao-ordem">↑</button>
+          <button @click="descerAcao(acao._id)" :disabled="index === acoesNaTabela.length - 1" class="botao-ordem">↓</button>
+        </td>
+
         <td>{{ acao.ticker }}</td>
+
         <td>{{ acao.preco?.toFixed(2) ?? '...' }}</td>
+
         <td :class="{
-            positivo: acao.preco && acao.preco > acao.fechamento,
-            negativo: acao.preco && acao.preco < acao.fechamento
+            positivo: acao.preco && acao.fechamento && acao.preco > acao.fechamento,
+            negativo: acao.preco && acao.fechamento && acao.preco < acao.fechamento
           }">
-          <span v-if="acao.preco">{{ (acao.preco - acao.fechamento).toFixed(2) }}</span>
+          <span v-if="acao.preco && acao.fechamento">{{ (acao.preco - acao.fechamento).toFixed(2) }}</span>
           <span v-else>...</span>
         </td>
+
         <td :class="{
-            positivo: acao.preco && acao.preco > acao.fechamento,
-            negativo: acao.preco && acao.preco < acao.fechamento
+            positivo: acao.preco && acao.fechamento && acao.preco > acao.fechamento,
+            negativo: acao.preco && acao.fechamento && acao.preco < acao.fechamento
           }">
-          <span v-if="acao.preco">{{ (((acao.preco / acao.fechamento) - 1) * 100).toFixed(2) }}%</span>
+          <span v-if="acao.preco && acao.fechamento">{{ (((acao.preco / acao.fechamento) - 1) * 100).toFixed(2) }}%</span>
           <span v-else>...</span>
         </td>
-        <td>
-          <button class="botao-remover" @click="removerAcao(acao.ticker)">
-            Remover
-          </button>
+
+        <td class="coluna-acoes-geral">
+          <button class="botao-tabela botao-comprar" @click="abrirModalCompra(acao)">Comprar</button>
+          <button class="botao-tabela botao-remover" @click="removerAcaoInteresse(acao._id)">Remover</button>
         </td>
       </tr>
       </tbody>
@@ -180,15 +264,9 @@ onUnmounted(() => {
 }
 
 .botao-adicionar {
-  all: unset;
-  cursor: pointer;
-  background-color: #27ae60;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  transition: background-color 0.2s;
+  all: unset; cursor: pointer; background-color: #27ae60; color: white;
+  padding: 10px 15px; border-radius: 5px; font-size: 14px;
+  font-weight: bold; transition: background-color 0.2s;
 }
 
 .botao-adicionar:hover {
@@ -196,20 +274,40 @@ onUnmounted(() => {
 }
 
 .tabela-acoes {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 16px;
+  width: 100%; border-collapse: collapse; font-size: 16px;
 }
 
 .tabela-acoes th, .tabela-acoes td {
-  border: 1px solid #333;
-  padding: 12px 15px;
-  text-align: center;
+  border: 1px solid #333; padding: 12px 15px; text-align: center;
 }
 
 .tabela-acoes th {
-  background-color: rgb(27,30,47);
+  background-color: rgb(27,30,47); color: white;
+}
+
+.botao-tabela {
+  all: unset;
+  cursor: pointer;
   color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  margin: 0 2px;
+}
+
+.botao-comprar {
+  background-color: #27ae60;
+}
+.botao-comprar:hover {
+  background-color: #2ecc71;
+}
+
+.coluna-acoes-geral {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
 }
 
 .positivo { color: #4caf50; }
@@ -226,17 +324,30 @@ onUnmounted(() => {
 }
 
 .botao-remover {
-  all: unset;
-  cursor: pointer;
-  background-color: #a72a2a;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 12px;
+  all: unset; cursor: pointer; background-color: #a72a2a; color: white;
+  padding: 5px 10px; border-radius: 5px; font-size: 12px;
   transition: background-color 0.2s;
 }
 
 .botao-remover:hover {
   background-color: #c43a3a;
+}
+
+.coluna-ordem {
+  width: 60px;
+}
+.botao-ordem {
+  all: unset; cursor: pointer; padding: 2px 6px;
+  font-size: 18px; border-radius: 4px;
+}
+.botao-ordem:hover:not(:disabled) {
+  background-color: #455a64;
+}
+.botao-ordem:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+.coluna-acoes-geral {
+  width: 100px;
 }
 </style>

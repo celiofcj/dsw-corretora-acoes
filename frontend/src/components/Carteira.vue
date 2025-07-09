@@ -21,8 +21,8 @@ const precosAtuais = ref<PrecoAtual[]>([])
 const loading = ref(true)
 const tickersAtualizados = ref(new Set<string>())
 
-let hora = 12
-let minuto = 0
+let hora = ref<number>(0)
+let minuto = ref<number>(0)
 
 const fetchCarteiras = async () => {
   try {
@@ -33,7 +33,7 @@ const fetchCarteiras = async () => {
     if (!carteiraRes.ok) throw new Error('Erro ao buscar carteira')
     carteiras.value = await carteiraRes.json()
 
-    const endpoint = `https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/${minuto}.json`
+    const endpoint = `https://raw.githubusercontent.com/marciobarros/dsw-simulador-corretora/refs/heads/main/${minuto.value}.json`
     const precosRes = await fetch(endpoint)
     if (!precosRes.ok) throw new Error('Erro ao buscar preços atuais')
     precosAtuais.value = await precosRes.json()
@@ -91,10 +91,10 @@ const confirmarVenda = async () => {
       agora.getFullYear(),
       agora.getMonth(),
       agora.getDate(),
-      hora,
-      minuto
+      hora.value,
+      minuto.value
   )
-  dataServidor.setHours(dataServidor.getHours() - 3)
+  dataServidor.setHours(dataServidor.getHours())
   const dataHoraSimulada = dataServidor.toISOString()
 
   const venda = {
@@ -126,19 +126,26 @@ const confirmarVenda = async () => {
 }
 
 const onProcessComplete = (horaOperacao: HoraOperacao) => {
-  hora = horaOperacao.hora
-  minuto = horaOperacao.minuto
+  console.log(`Horário recebido ${hora}${minuto}`)
+  hora.value = horaOperacao.hora
+  minuto.value = horaOperacao.minuto
   fetchCarteiras()
 }
 
 onMounted(() => {
+  console.log('Carteira mounted')
   fetchCarteiras()
+  emitter.on('time-now:response', onProcessComplete)
+  emitter.emit('time-now:request')
   emitter.on('time-process:complete', onProcessComplete)
 })
 
 onUnmounted(() => {
+  console.log('Carteira unmounted')
+  emitter.off('time-now:response', onProcessComplete)
   emitter.off('time-process:complete', onProcessComplete)
 })
+
 </script>
 
 <template>

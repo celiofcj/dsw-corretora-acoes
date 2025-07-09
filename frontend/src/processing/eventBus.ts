@@ -9,6 +9,10 @@ type Events = {
     'time-process:start': HoraOperacao;
 
     'time-process:complete': HoraOperacao;
+
+    'time-now:request': void;
+
+    'time-now:response': HoraOperacao
 };
 
 const emitter = mitt<Events>();

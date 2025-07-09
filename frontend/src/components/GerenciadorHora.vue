@@ -84,6 +84,9 @@ import {computed, onBeforeMount, onMounted, ref} from "vue";
   onMounted(async ()=> {
     await obterHorarioAtual()
     emitter.emit('time-process:start', { hora: hora.value, minuto: minuto.value })
+    emitter.on('time-now:request', ()=> {
+      emitter.emit('time-now:response', {hora: hora.value, minuto: minuto.value})
+    })
   })
 
 </script>

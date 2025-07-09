@@ -262,7 +262,8 @@ onUnmounted(() => {
 
 <style scoped>
 .container-mercado {
-  padding: 20px;
+  padding: 16px;
+  font-family: sans-serif;
 }
 
 .acoes-header {
@@ -272,91 +273,93 @@ onUnmounted(() => {
   margin-bottom: 1em;
 }
 
-.botao-adicionar {
-  all: unset; cursor: pointer; background-color: #27ae60; color: white;
-  padding: 10px 15px; border-radius: 5px; font-size: 14px;
-  font-weight: bold; transition: background-color 0.2s;
+.tabela-acoes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
+.tabela-acoes th,
+.tabela-acoes td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabela-acoes th {
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Estilos de cor para rendimento */
+.positivo {
+  color: #1a9c5a;
+  font-weight: 500;
+}
+.negativo {
+  color: #d83131;
+  font-weight: 500;
+}
+
+/* Animação para piscar */
+.blink {
+  animation: piscar 0.7s ease-in-out;
+}
+@keyframes piscar {
+  0% { background-color: transparent; }
+  50% { background-color: #e6f7ff; }
+  100% { background-color: transparent; }
+}
+
+/* --- ESTILOS DOS BOTÕES --- */
+
+/* Botão principal de Adicionar Ação */
+.botao-adicionar {
+  all: unset;
+  cursor: pointer;
+  background-color: #27ae60;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
 .botao-adicionar:hover {
   background-color: #2ecc71;
 }
 
-.tabela-acoes {
-  width: 100%; border-collapse: collapse; font-size: 16px;
-}
-
-.tabela-acoes th, .tabela-acoes td {
-  border: 1px solid #333; padding: 12px 15px; text-align: center;
-}
-
-.tabela-acoes th {
-  background-color: rgb(27,30,47); color: white;
-}
-
+/* Estilo base para botões dentro da tabela */
 .botao-tabela {
   all: unset;
   cursor: pointer;
   color: white;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 5px;
   font-size: 12px;
+  font-weight: bold;
   transition: background-color 0.2s;
-  margin: 0 2px;
+}
+.botao-tabela:hover {
+  opacity: 0.9;
 }
 
+/* Botões específicos */
 .botao-comprar {
   background-color: #27ae60;
 }
-.botao-comprar:hover {
-  background-color: #2ecc71;
-}
-
-.coluna-acoes-geral {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-}
-
-.positivo { color: #4caf50; }
-.negativo { color: #f44336; }
-
-.blink {
-  animation: piscar 1s ease-in-out;
-}
-
-@keyframes piscar {
-  0% { background-color: transparent; }
-  50% { background-color: rgba(0, 150, 255, 0.2); }
-  100% { background-color: transparent; }
-}
-
 .botao-remover {
-  all: unset; cursor: pointer; background-color: #a72a2a; color: white;
-  padding: 5px 10px; border-radius: 5px; font-size: 12px;
-  transition: background-color 0.2s;
-}
-
-.botao-remover:hover {
-  background-color: #c43a3a;
-}
-
-.coluna-ordem {
-  width: 60px;
+  background-color: #d83131;
 }
 .botao-ordem {
-  all: unset; cursor: pointer; padding: 2px 6px;
-  font-size: 18px; border-radius: 4px;
-}
-.botao-ordem:hover:not(:disabled) {
-  background-color: #455a64;
+  background-color: #7f8c8d;
+  font-size: 16px;
+  padding: 2px 8px;
 }
 .botao-ordem:disabled {
-  opacity: 0.2;
+  background-color: #bdc3c7;
   cursor: not-allowed;
-}
-.coluna-acoes-geral {
-  width: 100px;
+  opacity: 0.7;
 }
 </style>

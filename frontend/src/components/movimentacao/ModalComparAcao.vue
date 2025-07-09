@@ -2,24 +2,24 @@
 import { ref, defineProps, defineEmits, computed } from 'vue';
 
 // --- DEFINIÇÃO DE TIPOS ---
-// Ação recebida como propriedade
 interface AcaoParaCompra {
   ticker: string;
   preco?: number;
 }
 
-// Payload para a API, conforme sua interface
 interface PedidoOrdemCompra {
   ticker: string;
   quantidade: number;
   preco: number;
   executada: boolean;
-  dataHora: Date;
+  dataHora: string; // Corrigido para string
 }
 
 // --- PROPRIEDADES E EVENTOS ---
 const props = defineProps<{
   acao: AcaoParaCompra;
+  horaSimulada: number; // Recebe a hora da simulação
+  minutoSimulado: number; // Recebe o minuto da simulação
 }>();
 
 const emit = defineEmits(['fechar', 'ordemCriada']);
@@ -27,38 +27,44 @@ const emit = defineEmits(['fechar', 'ordemCriada']);
 // --- ESTADO REATIVO DO FORMULÁRIO ---
 const tipoOrdem = ref<'mercado' | 'limite'>('mercado');
 const quantidade = ref<number>(1);
-// Inicia o preço limite com o preço atual da ação
 const precoLimite = ref<number>(props.acao.preco ?? 0);
 const carregando = ref(false);
 const erroApi = ref<string | null>(null);
 
-// Validação simples para o botão de confirmação
 const isFormInvalido = computed(() => {
   if (quantidade.value <= 0) return true;
   if (tipoOrdem.value === 'limite' && precoLimite.value <= 0) return true;
   return false;
 });
 
-
 // --- LÓGICA DE SUBMISSÃO ---
 async function handleConfirmarCompra() {
   erroApi.value = null;
   carregando.value = true;
 
+  // Lógica para gerar a data/hora simulada
+  const agora = new Date();
+  const dataServidor = new Date(
+      agora.getFullYear(),
+      agora.getMonth(),
+      agora.getDate(),
+      props.horaSimulada,
+      props.minutoSimulado
+  );
+  dataServidor.setHours(dataServidor.getHours());
+  const dataHoraSimulada = dataServidor.toISOString();
+
   // Monta o payload para a API
   const payload: PedidoOrdemCompra = {
     ticker: props.acao.ticker,
     quantidade: quantidade.value,
-    dataHora: new Date(),
-    // Define 'preco' e 'executada' com base no tipo de ordem [cite: 46, 47]
+    dataHora: dataHoraSimulada,
     preco: tipoOrdem.value === 'mercado' ? (props.acao.preco ?? 0) : precoLimite.value,
     executada: tipoOrdem.value === 'mercado'
   };
 
   try {
     const token = localStorage.getItem('authToken');
-
-    // Usando a URL completa que definimos
     const response = await fetch('http://localhost:3000/ordemCompra', {
       method: 'POST',
       headers: {
@@ -73,8 +79,8 @@ async function handleConfirmarCompra() {
       throw new Error(erro.message || 'Ocorreu um erro ao criar a ordem.');
     }
 
-    emit('ordemCriada'); // Avisa o componente pai
-    emit('fechar'); // Fecha o modal
+    emit('ordemCriada');
+    emit('fechar');
 
   } catch (error: any) {
     erroApi.value = error.message;

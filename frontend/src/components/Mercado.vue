@@ -11,7 +11,7 @@ interface AcaoMestra { // Renomeado para clareza
 }
 
 export interface IAcaoInteresse {
-  _id: string;
+  id: string;
   ticker: string;
   ordem: number;
 }
@@ -31,7 +31,7 @@ const mostrarModal = ref(false);
 const carregando = ref(true);
 const acoesDeInteresse = ref<IAcaoInteresse[]>([]);
 const mostrarModalCompra = ref(false); // 2. Adicione estado para controlar o modal
-const acaoSelecionadaParaCompra = ref<AcaoNaTabela | null>(null);
+const acaoSelecionadaParaCompra = ref<{ acao: AcaoNaTabela, hora: number, minuto: number } | null>(null);
 
 
 async function fetchAcoesInteresse() {
@@ -132,7 +132,11 @@ const onProcessComplete = (horaOperacao: HoraOperacao) => {
 
 // 3. Adicione a função para abrir o modal
 function abrirModalCompra(acao: AcaoNaTabela) {
-  acaoSelecionadaParaCompra.value = acao;
+  acaoSelecionadaParaCompra.value = {
+    acao: acao,
+    hora: hora,
+    minuto: minuto
+  };
   mostrarModalCompra.value = true;
 }
 
@@ -189,7 +193,9 @@ onUnmounted(() => {
 
   <ModalComprarAcao
       v-if="mostrarModalCompra && acaoSelecionadaParaCompra"
-      :acao="acaoSelecionadaParaCompra"
+      :acao="acaoSelecionadaParaCompra.acao"
+      :hora-simulada="acaoSelecionadaParaCompra.hora"
+      :minuto-simulado="acaoSelecionadaParaCompra.minuto"
       @fechar="mostrarModalCompra = false"
       @ordem-criada="handleOrdemCriada"
   />
@@ -216,12 +222,12 @@ onUnmounted(() => {
       <tbody>
       <tr
           v-for="(acao, index) in acoesNaTabela"
-          :key="acao._id"
+          :key="acao.id"
           :class="{ blink: tickersAtualizados.has(acao.ticker) }"
       >
         <td class="coluna-ordem">
-          <button @click="subirAcao(acao._id)" :disabled="index === 0" class="botao-ordem">↑</button>
-          <button @click="descerAcao(acao._id)" :disabled="index === acoesNaTabela.length - 1" class="botao-ordem">↓</button>
+          <button @click="subirAcao(acao.id)" :disabled="index === 0" class="botao-ordem">↑</button>
+          <button @click="descerAcao(acao.id)" :disabled="index === acoesNaTabela.length - 1" class="botao-ordem">↓</button>
         </td>
 
         <td>{{ acao.ticker }}</td>
@@ -246,7 +252,7 @@ onUnmounted(() => {
 
         <td class="coluna-acoes-geral">
           <button class="botao-tabela botao-comprar" @click="abrirModalCompra(acao)">Comprar</button>
-          <button class="botao-tabela botao-remover" @click="removerAcaoInteresse(acao._id)">Remover</button>
+          <button class="botao-tabela botao-remover" @click="removerAcaoInteresse(acao.id)">Remover</button>
         </td>
       </tr>
       </tbody>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import { useRouter } from 'vue-router';
 
 const email = ref('');
@@ -39,6 +39,10 @@ const login = async () => {
     errorMessage.value = 'Não foi possível conectar ao servidor. Tente novamente mais tarde.';
   }
 };
+
+onMounted(()=> {
+  localStorage.clear()
+})
 </script>
 
 <template>

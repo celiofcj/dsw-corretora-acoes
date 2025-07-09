@@ -117,7 +117,6 @@ const confirmarVenda = async () => {
     })
 
     if (!res.ok) throw new Error('Erro ao registrar venda')
-    alert('Venda registrada com sucesso!')
     fecharModalVenda()
     fetchCarteiras()
   } catch (e) {

@@ -1,4 +1,4 @@
-import emitter from './eventBus';
+import emitter, {type HoraOperacao} from './eventBus';
 
 console.log('DataProcessor Singleton: Inicializado e pronto para escutar eventos.');
 
@@ -10,12 +10,12 @@ function processarMercado(minutos: number) {
 
 }
 
-emitter.on('time-process:start', (horaOperacao) => {
+emitter.on('time-process:start', (horaOperacao: HoraOperacao) => {
     console.log('Recebido')
     console.log(`[DataProcessor] Evento 'time-process:start' recebido com: ${horaOperacao}`);
 
-    processarCarteira(horaOperacao.contadorMinutos);
-    processarMercado(horaOperacao.contadorMinutos);
+    processarCarteira(horaOperacao.minuto);
+    processarMercado(horaOperacao.minuto);
 
     console.log(`[DataProcessor] Processamento concluído. Emitindo 'process:complete'.`);
 

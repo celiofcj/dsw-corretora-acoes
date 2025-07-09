@@ -1,31 +1,91 @@
 <script setup lang="ts">
-  import { computed, ref } from "vue";
+import {computed, onBeforeMount, onMounted, ref} from "vue";
   import emitter from "@/processing/eventBus.ts";
 
-  const hora = ref(12)
-  const minuto = ref(0)
+  const hora = ref<number>(0)
+  const minuto = ref<number>(0)
+  const token = localStorage.getItem('authToken');
 
-  let contadorMinutos = 0
+  const url = 'http://localhost:3000/negociacao'
 
+  async function registrarHorarioAtual(hora: number, minuto: number) {
+    await fetch(url + '/atualizarHoraNegociacao', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        horaNegociacao: formatarHorario(hora, minuto)
+      })
+    }).catch(error => {
+        console.error(error)
+      })
+  }
+
+  async function obterHorarioAtual() {
+
+    await fetch(url + '/horaNegociacao', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+    }).then(response => {
+        if (!response.ok && response.status !== 404) {
+          throw new Error('Erro ao consultar horário')
+        }
+
+        if(response.status == 404) {
+          hora.value = 12
+          minuto.value = 0
+
+          return null
+        }
+
+        return response.json()
+      }).then(json => {
+        if(json === null) {
+          return
+        }
+
+        const horaNegociacao = json.horaNegociacao
+        console.log(`hora: ${horaNegociacao.substring(0, 2)}`)
+        console.log(`${horaNegociacao.substring(3, 5)}`)
+        hora.value = parseInt(horaNegociacao.substring(0, 2))
+        minuto.value = parseInt(horaNegociacao.substring(3, 5))
+      }).catch(error => {
+          console.error(error)
+        })
+  }
   function avancarMinutos(minutos: number) {
     console.log('Enviando notificação')
-    contadorMinutos += minutos
     const totalMinutos = hora.value * 60 + minuto.value + minutos
 
     const horaCalculada = Math.floor((totalMinutos % 1440) / 60)
     const minutoCalculado = totalMinutos % 60
 
-    emitter.emit('time-process:start', { hora: horaCalculada, minuto: minutoCalculado, contadorMinutos })
+    emitter.emit('time-process:start', { hora: horaCalculada, minuto: minutoCalculado })
 
+    registrarHorarioAtual(horaCalculada, minutoCalculado)
     hora.value = horaCalculada
     minuto.value = minutoCalculado
   }
 
-  const horaFormatada = computed(() => {
-    const h = hora.value.toString().padStart(2, '0')
-    const m = minuto.value.toString().padStart(2, '0')
+  function formatarHorario(hora: number, minuto: number) {
+    const h = hora.toString().padStart(2, '0')
+    const m = minuto.toString().padStart(2, '0')
     return `${h}:${m}`
+  }
+
+  const horaFormatada = computed(() => {
+    return formatarHorario(hora.value, minuto.value);
   })
+
+  onMounted(async ()=> {
+    await obterHorarioAtual()
+    emitter.emit('time-process:start', { hora: hora.value, minuto: minuto.value })
+  })
+
 </script>
 
 <template>

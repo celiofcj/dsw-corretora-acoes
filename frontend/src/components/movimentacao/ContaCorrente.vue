@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import emitter from "@/processing/eventBus.ts";
+import emitter, {type HoraOperacao} from "@/processing/eventBus.ts";
 import {
   type TipoMovimentacao,
   TipoMovimentacaoInfo,
@@ -9,6 +9,9 @@ import {
 import {useMovimentacao} from "@/composable/useMovimentacao.ts";
 import BotoesTransferencia from "@/components/movimentacao/BotoesTransferencia.vue";
 import ModalTransferencia from "@/components/movimentacao/ModalTransferencia.vue";
+
+let hora: number
+let minuto: number
 
 const {
   contaCorrente,
@@ -38,7 +41,7 @@ const closeModal = () => {
 const registrarTransacao = async (payload: { descricao: string; valor: number; tipo: 'DEPOSITO' | 'RETIRADA' }) => {
   apiError.value = null;
   try {
-    await registrarMovimentacao(payload);
+    await registrarMovimentacao(payload, hora, minuto);
     await getContaCorrente();
     await getMovimentacoes();
     closeModal();
@@ -48,16 +51,20 @@ const registrarTransacao = async (payload: { descricao: string; valor: number; t
   }
 };
 
-const onProcessComplete = () => {
+const onProcessComplete = (horaOperacao: HoraOperacao) => {
   console.log(`[ListenerComponent] Evento 'process:complete' recebido!`);
   getContaCorrente();
   getMovimentacoes();
+  hora = horaOperacao.hora
+  minuto = horaOperacao.minuto
 };
 
 onMounted(() => {
   console.log('On mount');
   getContaCorrente();
   getMovimentacoes();
+  emitter.on('time-now:response', onProcessComplete)
+  emitter.emit('time-now:request')
   emitter.on('time-process:complete', onProcessComplete);
 });
 

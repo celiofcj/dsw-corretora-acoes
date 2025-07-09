@@ -54,8 +54,20 @@ export function useMovimentacao() {
         }
     };
 
-    const registrarMovimentacao = async (payload: { descricao: string; valor: number; tipo: 'DEPOSITO' | 'RETIRADA' }) => {
+    const registrarMovimentacao = async (payload: { descricao: string; valor: number; tipo: 'DEPOSITO' | 'RETIRADA'}, hora: number, minuto: number) => {
         isSubmitting.value = true;
+
+        const agora = new Date()
+        const dataServidor = new Date(
+            agora.getFullYear(),
+            agora.getMonth(),
+            agora.getDate(),
+            hora,
+            minuto
+        )
+        dataServidor.setHours(dataServidor.getHours())
+        const dataHoraSimulada = dataServidor.toISOString()
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -65,7 +77,7 @@ export function useMovimentacao() {
                 },
                 body: JSON.stringify({
                     ...payload,
-                    dataHora: new Date(),
+                    dataHora: dataHoraSimulada,
                 })
             });
 
